@@ -1,17 +1,45 @@
-dist: xenial
-services:
-  - postgresql
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq build-essential gettext python-dev zlib1g-dev libpq-dev xvfb
-  - sudo apt-get install -qq libjpeg8-dev libfreetype6-dev libwebp-dev
-  - sudo apt-get install -qq graphviz-dev python-setuptools python3-dev python-virtualenv python-pip
-  - sudo apt-get install -qq firefox automake libtool libreadline6 libreadline6-dev libreadline-dev
-  - sudo apt-get install -qq libsqlite3-dev libxml2 libxml2-dev libssl-dev libbz2-dev wget curl llvm
+dist: bionic
+
 language: python
-python:
-  - "3.7"
+
+os:
+  - linux
+
+services:
+  - docker
+
+cache:
+  pip: true
+  directories:
+    - $HOME/.cache/pip
+
+addons:
+  apt:
+    packages:
+    - python3-pip
+    - python3-setuptools
+
+before_script:
+  # build docker images development
+  - sudo docker-compose -f local.yml build
+  # build docker images production
+  - cp -r .envs/.local/ .envs/.production/
+  - sudo docker-compose -f production.yml build
+
 install:
-  - pip install -r requirements/local.txt
+  # install docker-compose
+  - pip3 install docker-compose wheel
+
 script:
-  - "pytest"
+  # run tests
+  - sudo docker-compose -f local.yml run django coverage run -m pytest
+  # test commands
+  - sudo docker-compose -f local.yml run django python manage.py migrate
+
+# code coverage
+after_success:
+  - echo TRAVIS_JOB_ID=$TRAVIS_JOB_ID >> .envs/.local/.django
+  - echo TRAVIS_BRANCH=$TRAVIS_BRANCH >> .envs/.local/.django
+  - echo COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN >> .envs/.local/.django
+  - sudo docker-compose -f local.yml run django coverage report -m
+  - sudo docker-compose -f local.yml run django coveralls
