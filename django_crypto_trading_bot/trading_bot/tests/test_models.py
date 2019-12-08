@@ -9,4 +9,5 @@ def test_get_client():
     account: Account = AccountFactory()
     client: Exchange = account.get_client()
 
-    assert isinstance(dict, client.fetch_balance())
+    balance: dict = client.fetch_balance()
+    assert isinstance(balance, dict)
