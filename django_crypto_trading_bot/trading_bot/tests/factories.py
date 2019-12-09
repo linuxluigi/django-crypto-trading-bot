@@ -6,13 +6,10 @@ from config.settings.base import env
 import pytest
 
 
-
 class AccountFactory(DjangoModelFactory):
     class Meta:
         model = "trading_bot.Account"
-        django_get_or_create = [
-            "api_key",
-        ]
+        django_get_or_create = ["api_key"]
 
     exchange = "kucoin"
     user = SubFactory(UserFactory)
@@ -21,3 +18,39 @@ class AccountFactory(DjangoModelFactory):
     password = env("KUCOIN_SANDBOX_PASSWORD")
     sandbox = True
 
+
+class BtcCurrencyFactory(DjangoModelFactory):
+    class Meta:
+        model = "trading_bot.Currency"
+        django_get_or_create = ["short"]
+
+    name = "Bitcoin"
+    short = "BTC"
+
+
+class EthCurrencyFactory(DjangoModelFactory):
+    class Meta:
+        model = "trading_bot.Currency"
+        django_get_or_create = ["short"]
+
+    name = "Ethereum"
+    short = "ETH"
+
+
+class MarketFactory(DjangoModelFactory):
+    class Meta:
+        model = "trading_bot.Market"
+        django_get_or_create = ["first_currency", "secound_currency"]
+
+    first_currency = SubFactory(EthCurrencyFactory)
+    secound_currency = SubFactory(BtcCurrencyFactory)
+
+
+class BotFactory(DjangoModelFactory):
+    class Meta:
+        model = "trading_bot.Bot"
+        django_get_or_create = ["api_key"]
+
+    account = SubFactory(AccountFactory)
+    market = SubFactory(MarketFactory)
+    day_span = 1
