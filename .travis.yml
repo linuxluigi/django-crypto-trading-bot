@@ -35,6 +35,8 @@ script:
   - sudo docker-compose -f local.yml run django coverage run -m pytest
   # test commands
   - sudo docker-compose -f local.yml run django python manage.py migrate
+  # type checks
+  - sudo docker-compose -f local.yml run django coverage run -m mypy django_crypto_trading_bot
 
 # code coverage
 after_success:
