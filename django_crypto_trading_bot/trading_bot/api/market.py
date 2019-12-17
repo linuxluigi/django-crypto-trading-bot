@@ -8,10 +8,19 @@ def get_or_create_market(response: dict) -> Market:
     base, create = Currency.objects.get_or_create(short=response["base"])
     quote, create = Currency.objects.get_or_create(short=response["quote"])
 
-    return Market(
-        base=base,
-        quote=quote,
-        active=response["active"],
-        precision_amount=response["precision"]["amount"],
-        precision_price=response["precision"]["price"],
-    )
+    try:
+        market: Market = Market.objects.get(base=base, quote=quote)
+        market.active = response["active"]
+        market.precision_amount = response["precision"]["amount"]
+        market.precision_price = response["precision"]["price"]
+        market.save()
+        return market
+
+    except Market.DoesNotExist:
+        return Market(
+            base=base,
+            quote=quote,
+            active=response["active"],
+            precision_amount=response["precision"]["amount"],
+            precision_price=response["precision"]["price"],
+        )
