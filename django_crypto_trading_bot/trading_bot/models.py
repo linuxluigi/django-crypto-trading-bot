@@ -2,6 +2,7 @@ from django.db import models
 import ccxt
 from django_crypto_trading_bot.users.models import User
 from ccxt.base.exchange import Exchange
+from .api.client import get_client
 
 
 class Account(models.Model):
@@ -18,19 +19,10 @@ class Account(models.Model):
     secret = models.CharField(max_length=250)
     password = models.CharField(max_length=250, blank=True, null=True)
 
-    def get_client(self) -> Exchange:
-        exchange_id = self.exchange
-        exchange_class = getattr(ccxt, exchange_id)
-        exchange: Exchange = exchange_class(
-            {
-                "apiKey": self.api_key,
-                "secret": self.secret,
-                "timeout": 30000,
-                "enableRateLimit": True,
-            }
+    def get_account_client(self) -> Exchange:
+        return get_client(
+            exchange_id=self.exchange, api_key=self.api_key, secret=self.secret
         )
-
-        return exchange
 
     def __str__(self):
         return "{}: {}".format(self.pk, self.user.get_username())
@@ -53,8 +45,6 @@ class Market(models.Model):
     base = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="base")
     quote = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="quote")
     active = models.BooleanField(default=True)
-    precision_base = models.IntegerField()
-    precision_quote = models.IntegerField()
     precision_amount = models.IntegerField()
     precision_price = models.IntegerField()
 

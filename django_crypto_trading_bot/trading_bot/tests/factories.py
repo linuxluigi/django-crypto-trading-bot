@@ -43,8 +43,6 @@ class MarketFactory(DjangoModelFactory):
     base = SubFactory(TrxCurrencyFactory)
     quote = SubFactory(BnbCurrencyFactory)
     active = True
-    precision_base = 8
-    precision_quote = 8
     precision_amount = 0
     precision_price = 6
 

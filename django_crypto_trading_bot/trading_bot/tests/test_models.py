@@ -5,9 +5,9 @@ from ccxt.base.exchange import Exchange
 
 
 @pytest.mark.django_db()
-def test_get_client():
+def test_get_account_client():
     account: Account = AccountFactory()
-    client: Exchange = account.get_client()
+    client: Exchange = account.get_account_client()
 
     balance: dict = client.fetch_balance()
     assert isinstance(balance, dict)
@@ -21,7 +21,7 @@ def test_symbol():
 
     # chekc if this symbol works on binance
     account: Account = AccountFactory()
-    client: Exchange = account.get_client()
+    client: Exchange = account.get_account_client()
     client.load_markets()
 
     market_exchange = client.market(market.symbol)
