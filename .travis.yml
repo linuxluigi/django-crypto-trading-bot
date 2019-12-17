@@ -41,5 +41,7 @@ after_success:
   - echo TRAVIS_JOB_ID=$TRAVIS_JOB_ID >> .envs/.local/.django
   - echo TRAVIS_BRANCH=$TRAVIS_BRANCH >> .envs/.local/.django
   - echo COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN >> .envs/.local/.django
+  - echo BINANCE_SANDBOX_API_KEY=$BINANCE_SANDBOX_API_KEY >> .env
+  - echo BINANCE_SANDBOX_SECRET_KEY=$BINANCE_SANDBOX_SECRET_KEY >> .env
   - sudo docker-compose -f local.yml run django coverage report -m
   - sudo docker-compose -f local.yml run django coveralls

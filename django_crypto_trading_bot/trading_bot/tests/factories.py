@@ -11,39 +11,42 @@ class AccountFactory(DjangoModelFactory):
         model = "trading_bot.Account"
         django_get_or_create = ["api_key"]
 
-    exchange = "kucoin"
+    exchange = "binance"
     user = SubFactory(UserFactory)
-    api_key = env("KUCOIN_SANDBOX_PUBLIC_KEY")
-    secret = env("KUCOIN_SANDBOX_PRIVATE_KEY")
-    password = env("KUCOIN_SANDBOX_PASSWORD")
-    sandbox = True
+    api_key = env("BINANCE_SANDBOX_API_KEY")
+    secret = env("BINANCE_SANDBOX_SECRET_KEY")
 
 
-class BtcCurrencyFactory(DjangoModelFactory):
+class TrxCurrencyFactory(DjangoModelFactory):
     class Meta:
         model = "trading_bot.Currency"
         django_get_or_create = ["short"]
 
-    name = "Bitcoin"
-    short = "BTC"
+    name = "TRON"
+    short = "TRX"
 
 
-class EthCurrencyFactory(DjangoModelFactory):
+class BnbCurrencyFactory(DjangoModelFactory):
     class Meta:
         model = "trading_bot.Currency"
         django_get_or_create = ["short"]
 
-    name = "Ethereum"
-    short = "ETH"
+    name = "Binance Coin"
+    short = "BNB"
 
 
 class MarketFactory(DjangoModelFactory):
     class Meta:
         model = "trading_bot.Market"
-        django_get_or_create = ["first_currency", "secound_currency"]
+        django_get_or_create = ["base", "quote"]
 
-    first_currency = SubFactory(EthCurrencyFactory)
-    secound_currency = SubFactory(BtcCurrencyFactory)
+    base = SubFactory(TrxCurrencyFactory)
+    quote = SubFactory(BnbCurrencyFactory)
+    active = True
+    precision_base = 8
+    precision_quote = 8
+    precision_amount = 0
+    precision_price = 6
 
 
 class BotFactory(DjangoModelFactory):

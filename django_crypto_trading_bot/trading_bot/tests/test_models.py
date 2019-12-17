@@ -15,6 +15,14 @@ def test_get_client():
 
 @pytest.mark.django_db()
 def test_symbol():
+    # check if symbol create the right symbol
     market: Market = MarketFactory()
+    assert "TRX/BNB" == market.symbol
 
-    assert "ETH/BTC" == market.symbol()
+    # chekc if this symbol works on binance
+    account: Account = AccountFactory()
+    client: Exchange = account.get_client()
+    client.load_markets()
+
+    market_exchange = client.market(market.symbol)
+    assert market.symbol == market_exchange["symbol"]

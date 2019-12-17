@@ -5,14 +5,18 @@ from ccxt.base.exchange import Exchange
 
 
 class Account(models.Model):
-    EXCHANGES = (("Kucoin", "kucoin"), ("Binance", "binance"))
+    """
+    API Account
+    for an exchange like binance
+    """
+
+    EXCHANGES = (("Binance", "binance"),)
 
     exchange = models.CharField(max_length=250, choices=EXCHANGES)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     api_key = models.CharField(max_length=250)
     secret = models.CharField(max_length=250)
     password = models.CharField(max_length=250, blank=True, null=True)
-    sandbox = models.BooleanField(default=False)
 
     def get_client(self) -> Exchange:
         exchange_id = self.exchange
@@ -21,14 +25,10 @@ class Account(models.Model):
             {
                 "apiKey": self.api_key,
                 "secret": self.secret,
-                "password": self.password,
                 "timeout": 30000,
                 "enableRateLimit": True,
             }
         )
-
-        # set sandbox mode
-        exchange.set_sandbox_mode(self.sandbox)
 
         return exchange
 
@@ -37,34 +37,70 @@ class Account(models.Model):
 
 
 class Currency(models.Model):
+    """
+    Cryptocurrency
+    """
+
     name = models.CharField(max_length=50, blank=True, null=True)
     short = models.CharField(max_length=50, unique=True)
 
 
 class Market(models.Model):
-    first_currency = models.ForeignKey(
-        Currency, on_delete=models.PROTECT, related_name="first_currency"
-    )
-    secound_currency = models.ForeignKey(
-        Currency, on_delete=models.PROTECT, related_name="secound_currency"
-    )
+    """
+    Market model based on https://github.com/ccxt/ccxt/wiki/Manual#market-structure
+    """
 
+    base = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="base")
+    quote = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="quote")
+    active = models.BooleanField(default=True)
+    precision_base = models.IntegerField()
+    precision_quote = models.IntegerField()
+    precision_amount = models.IntegerField()
+    precision_price = models.IntegerField()
+
+    @property
     def symbol(self):
-        return "{}/{}".format(self.first_currency.short, self.secound_currency.short)
+        return "{}/{}".format(self.base.short.upper(), self.quote.short.upper())
+
+    @property
+    def market_id(self):
+        return "{}{}".format(self.base.short.lower(), self.quote.short.lower())
+
+    @property
+    def baseId(self):
+        return self.base.short.lower()
+
+    @property
+    def quoteId(self):
+        return self.quote.short.lower()
 
     def __str__(self) -> str:
-        return self.symbol()
+        return self.symbol
 
 
 class Bot(models.Model):
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    market = models.ForeignKey(Market, on_delete=models.PROTECT)
+    """
+    Trading Bot
+    """
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)  # API Account
+    market = models.ForeignKey(
+        Market, on_delete=models.PROTECT
+    )  # Cryptomarket like TRX/BNB
     created = models.DateTimeField(auto_now_add=True)
-    day_span = models.IntegerField(default=30)
-    min_profit = models.DecimalField(max_digits=30, decimal_places=2, default=0.1)
+    day_span = models.IntegerField(
+        default=30
+    )  # how many days will be analysed for new trading order
+    min_profit = models.DecimalField(
+        max_digits=30, decimal_places=2, default=0.1
+    )  # min profit for each trade in percent
 
 
 class Order(models.Model):
+    """
+    Order based on https://github.com/ccxt/ccxt/wiki/Manual#order-structure
+    """
+
     status_choice = (("open", "open"), ("closed", "closed"), ("canceled", "canceled"))
     order_type_choice = (("market", "market"), ("limit", "limit"))
     side_choice = (("buy", "buy"), ("sell", "sell"))
@@ -92,6 +128,10 @@ class Order(models.Model):
 
 
 class Trade(models.Model):
+    """
+    Trade based on https://github.com/ccxt/ccxt/wiki/Manual#trade-structure
+    """
+
     taker_or_maker_choice = (("market", "market"), ("limit", "limit"))
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

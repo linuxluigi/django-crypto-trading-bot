@@ -19,9 +19,8 @@ services:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
     environment:
-      - KUCOIN_SANDBOX_PUBLIC_KEY=${KUCOIN_SANDBOX_PUBLIC_KEY}
-      - KUCOIN_SANDBOX_PRIVATE_KEY=${KUCOIN_SANDBOX_PRIVATE_KEY}
-      - KUCOIN_SANDBOX_PASSWORD=${KUCOIN_SANDBOX_PASSWORD}
+      - BINANCE_SANDBOX_API_KEY=${BINANCE_SANDBOX_API_KEY}
+      - BINANCE_SANDBOX_SECRET_KEY=${BINANCE_SANDBOX_SECRET_KEY}
     ports:
       - "8000:8000"
     command: /start
