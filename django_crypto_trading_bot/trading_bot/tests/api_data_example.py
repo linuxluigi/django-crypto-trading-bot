@@ -58,5 +58,19 @@ def market_structure() -> dict:
         "quoteId": "usdt",
         "active": True,
         "precision": {"price": 8, "amount": 8, "cost": 8},
-        "limits": {"amount": {"min": 0.01, "max": 1000}},
+        "limits": {"amount": {"min": 0.01, "max": 1000}, "price": {"min": 0.01, "max": 1000000.0}},
+    }
+
+
+def market_structure_eth_btc() -> dict:
+    return {
+        "id": " ETHBTC",
+        "symbol": "ETH/BTC",
+        "base": "ETH",
+        "quote": "BTC",
+        "baseId": "ETH",
+        "quoteId": "BTC",
+        "active": True,
+        "precision": {"price": 8, "amount": 3, "cost": 3},
+        "limits": {"amount": {"min": 0.001, "max": 100000}, "price": {"min": 1e-06, "max": 100000.0}},
     }

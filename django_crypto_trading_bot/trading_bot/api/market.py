@@ -15,17 +15,27 @@ def get_or_create_market(response: dict) -> Market:
         market.active = response["active"]
         market.precision_amount = response["precision"]["amount"]
         market.precision_price = response["precision"]["price"]
+        market.limits_amount_min = response["limits"]["amount"]["min"]
+        market.limits_amount_max = response["limits"]["amounts"]["max"]
+        market.limits_price_min = response["limits"]["price"]["min"]
+        market.limits_price_max = response["limits"]["price"]["max"]
         market.save()
         return market
 
     except Market.DoesNotExist:
-        return Market(
+        market: Market = Market(
             base=base,
             quote=quote,
             active=response["active"],
             precision_amount=response["precision"]["amount"],
             precision_price=response["precision"]["price"],
+            limits_amount_min=response["limits"]["amount"]["min"],
+            limits_amount_max=response["limits"]["amount"]["max"],
+            limits_price_min=response["limits"]["price"]["min"],
+            limits_price_max=response["limits"]["price"]["max"]
         )
+        market.save()
+        return market
 
 
 def update_market(market: Market) -> Market:
@@ -43,11 +53,9 @@ def update_all_markets() -> list:
     Update all markets
     :return: list with all updated market objects
     """
-    update_markets = list()
+    updated_markets = list()
     exchange: Exchange = get_client(exchange_id="binance")
     exchange.load_markets()
-    markets = exchange.markets
-    for market in markets.values():
-        update_markets.append(get_or_create_market(market))
-
-    return update_markets
+    for market in Market.objects.all():
+        updated_markets.append(get_or_create_market(exchange.market(market.symbol)))
+    return updated_markets

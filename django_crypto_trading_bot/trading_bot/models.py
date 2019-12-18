@@ -1,5 +1,4 @@
 from django.db import models
-import ccxt
 from django_crypto_trading_bot.users.models import User
 from ccxt.base.exchange import Exchange
 from .api.client import get_client
@@ -47,6 +46,10 @@ class Market(models.Model):
     active = models.BooleanField(default=True)
     precision_amount = models.IntegerField()
     precision_price = models.IntegerField()
+    limits_amount_min = models.FloatField()
+    limits_amount_max = models.FloatField()
+    limits_price_min = models.FloatField()
+    limits_price_max = models.FloatField()
 
     @property
     def symbol(self):

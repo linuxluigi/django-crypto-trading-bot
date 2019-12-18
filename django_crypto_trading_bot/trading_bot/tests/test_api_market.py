@@ -5,7 +5,7 @@ from django_crypto_trading_bot.trading_bot.api.market import (
     get_or_create_market,
     update_market,
     update_all_markets)
-from .api_data_example import market_structure
+from .api_data_example import market_structure, market_structure_eth_btc
 from django_crypto_trading_bot.trading_bot.models import Market, Currency
 from .factories import OutOfDataMarketFactory
 
@@ -56,11 +56,13 @@ def test_update_market():
 
 @pytest.mark.django_db()
 def test_update_all_markets():
-    # load outdated market
     out_of_data_market: Market = OutOfDataMarketFactory()
+    get_or_create_market(response=market_structure_eth_btc())
 
     # update market
     updated_markets: list = update_all_markets()
+
+    assert len(updated_markets) == 2
 
     # get market from binance
     exchange: Exchange = get_client(exchange_id="binance")
