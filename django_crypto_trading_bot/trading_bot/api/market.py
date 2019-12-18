@@ -16,7 +16,7 @@ def get_or_create_market(response: dict) -> Market:
         market.precision_amount = response["precision"]["amount"]
         market.precision_price = response["precision"]["price"]
         market.limits_amount_min = response["limits"]["amount"]["min"]
-        market.limits_amount_max = response["limits"]["amounts"]["max"]
+        market.limits_amount_max = response["limits"]["amount"]["max"]
         market.limits_price_min = response["limits"]["price"]["min"]
         market.limits_price_max = response["limits"]["price"]["max"]
         market.save()
