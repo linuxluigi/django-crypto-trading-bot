@@ -1,4 +1,6 @@
 from django_crypto_trading_bot.trading_bot.models import Market, Currency
+from django_crypto_trading_bot.trading_bot.api.client import get_client
+from ccxt.base.exchange import Exchange
 
 
 def get_or_create_market(response: dict) -> Market:
@@ -24,3 +26,13 @@ def get_or_create_market(response: dict) -> Market:
             precision_amount=response["precision"]["amount"],
             precision_price=response["precision"]["price"],
         )
+
+
+def update_market(market: Market) -> Market:
+    """
+    Update Market Order 
+    """
+    exchange: Exchange = get_client(exchange_id="binance")
+    exchange.load_markets()
+    market_exchange: dict = exchange.market(market.symbol)
+    return get_or_create_market(market_exchange)

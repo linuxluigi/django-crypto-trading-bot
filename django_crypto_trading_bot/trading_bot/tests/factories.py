@@ -26,13 +26,19 @@ class TrxCurrencyFactory(DjangoModelFactory):
     short = "TRX"
 
 
-class BnbCurrencyFactory(DjangoModelFactory):
-    class Meta:
-        model = "trading_bot.Currency"
-        django_get_or_create = ["short"]
-
+class BnbCurrencyFactory(TrxCurrencyFactory):
     name = "Binance Coin"
     short = "BNB"
+
+
+class BtcCurrencyFactory(TrxCurrencyFactory):
+    name = "Bitcoin"
+    short = "BTC"
+
+
+class UsdtCurrencyFactory(TrxCurrencyFactory):
+    name = "Tether"
+    short = "USDT"
 
 
 class MarketFactory(DjangoModelFactory):
@@ -45,6 +51,14 @@ class MarketFactory(DjangoModelFactory):
     active = True
     precision_amount = 0
     precision_price = 6
+
+
+class OutOfDataMarketFactory(MarketFactory):
+    base = SubFactory(BtcCurrencyFactory)
+    quote = SubFactory(UsdtCurrencyFactory)
+    active = False
+    precision_amount = 10
+    precision_price = 10
 
 
 class BotFactory(DjangoModelFactory):
