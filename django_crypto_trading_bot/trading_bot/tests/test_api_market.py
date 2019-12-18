@@ -32,15 +32,16 @@ def test_get_or_create_market():
 
 @pytest.mark.django_db()
 def test_update_market():
+    exchange: Exchange = get_client(exchange_id="binance")
+    exchange.load_markets()
+
     # load outdated market
     out_of_data_market: Market = OutOfDataMarketFactory()
 
     # update market
-    updated_market: Market = update_market(market=out_of_data_market)
+    updated_market: Market = update_market(market=out_of_data_market, exchange=exchange)
 
     # get market from binance
-    exchange: Exchange = get_client(exchange_id="binance")
-    exchange.load_markets()
     market_exchange: dict = exchange.market(out_of_data_market.symbol)
 
     assert isinstance(updated_market, Market)
@@ -56,17 +57,18 @@ def test_update_market():
 
 @pytest.mark.django_db()
 def test_update_all_markets():
+    exchange: Exchange = get_client(exchange_id="binance")
+    exchange.load_markets()
+
     out_of_data_market: Market = OutOfDataMarketFactory()
     get_or_create_market(response=market_structure_eth_btc())
 
     # update market
-    updated_markets: list = update_all_markets()
+    updated_markets: list = update_all_markets(exchange)
 
     assert len(updated_markets) == 2
 
     # get market from binance
-    exchange: Exchange = get_client(exchange_id="binance")
-    exchange.load_markets()
     market_exchange: dict = exchange.market(out_of_data_market.symbol)
 
     for updated_market in updated_markets:

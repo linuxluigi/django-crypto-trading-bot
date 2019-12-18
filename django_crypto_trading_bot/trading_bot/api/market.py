@@ -1,5 +1,4 @@
 from django_crypto_trading_bot.trading_bot.models import Market, Currency
-from django_crypto_trading_bot.trading_bot.api.client import get_client
 from ccxt.base.exchange import Exchange
 
 
@@ -23,7 +22,7 @@ def get_or_create_market(response: dict) -> Market:
         return market
 
     except Market.DoesNotExist:
-        market: Market = Market(
+        market: Market = Market.objects.create(
             base=base,
             quote=quote,
             active=response["active"],
@@ -34,28 +33,26 @@ def get_or_create_market(response: dict) -> Market:
             limits_price_min=response["limits"]["price"]["min"],
             limits_price_max=response["limits"]["price"]["max"]
         )
-        market.save()
         return market
 
 
-def update_market(market: Market) -> Market:
+def update_market(market: Market, exchange: Exchange) -> Market:
     """
     Update Market Order
+    Note: Please pass a client which has preloaded all markets to reduce network requests
     """
-    exchange: Exchange = get_client(exchange_id="binance")
-    exchange.load_markets()
+    if exchange.markets is None:
+        raise Exception('Please load market data before update market model!')
     market_exchange: dict = exchange.market(market.symbol)
     return get_or_create_market(market_exchange)
 
 
-def update_all_markets() -> list:
+def update_all_markets(exchange: Exchange) -> list:
     """
     Update all markets
     :return: list with all updated market objects
     """
     updated_markets = list()
-    exchange: Exchange = get_client(exchange_id="binance")
-    exchange.load_markets()
     for market in Market.objects.all():
-        updated_markets.append(get_or_create_market(exchange.market(market.symbol)))
+        updated_markets.append(update_market(market, exchange))
     return updated_markets

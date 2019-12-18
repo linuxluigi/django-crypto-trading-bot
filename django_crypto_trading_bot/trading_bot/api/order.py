@@ -5,7 +5,18 @@ from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.models import Currency, Order
 
 
-def create_buy_order(base: Currency, quote: Currency, amount, price, botId, isTestOrder):
+def create_order(base: Currency, quote: Currency, amount, price, side, botId, isTestOrder):
+    """
+    Create an order
+    :param base: base currency
+    :param quote: destination currency
+    :param amount: amount you want to buy
+    :param price: the price you want to spend
+    :param side: sell or buy order?
+    :param botId: id of the bot which has placed the order
+    :param isTestOrder: is this a test order?
+    :return: Order object
+    """
     exchange: Exchange = get_client(exchange_id="binance")
     symbol = base.short + '/' + quote.short
 
@@ -13,17 +24,15 @@ def create_buy_order(base: Currency, quote: Currency, amount, price, botId, isTe
         'test': isTestOrder,  # test if it's valid, but don't actually place it
     }
 
-    cctxOrder = exchange.create_order(symbol, 'limit', 'buy', amount, price, params)
-
-    order: Order = None
+    cctxOrder = exchange.create_order(symbol, 'limit', side, amount, price, params)
 
     if isTestOrder:
-        order: Order = Order(
+        return Order.objects.create(
             bot_id=botId,
             status="open",
             order_id=len(Order.objects.all()) + 1,
             order_type="limit",
-            side="buy",
+            side=side,
             timestamp=datetime.fromtimestamp(1545730073),
             price=price,
             amount=amount,
@@ -33,48 +42,17 @@ def create_buy_order(base: Currency, quote: Currency, amount, price, botId, isTe
             fee_rate=0.002
         )
     else:
-        order = create_order_from_api_response(cctxOrder, botId)
-
-    order.save()
-    return order
+        return __create_order_from_api_response(cctxOrder, botId)
 
 
-def create_sell_order(base: Currency, quote: Currency, amount, price, botId, isTestOrder):
-    exchange: Exchange = get_client(exchange_id="binance")
-    symbol = base.short + '/' + quote.short
-
-    params = {
-        'test': isTestOrder,  # test if it's valid, but don't actually place it
-    }
-
-    cctxOrder = exchange.create_order(symbol, 'limit', 'sell', amount, price, params)
-
-    order: Order = None
-
-    if isTestOrder:
-        order: Order = Order(
-            bot_id=botId,
-            status="open",
-            order_id=len(Order.objects.all()) + 1,
-            order_type="limit",
-            side="sell",
-            timestamp=datetime.fromtimestamp(1545730073),
-            price=price,
-            amount=amount,
-            filled=0,
-            fee_currency=quote,
-            fee_cost=0.0009,
-            fee_rate=0.002
-        )
-    else:
-        order = create_order_from_api_response(cctxOrder, botId)
-
-    order.save()
-    return order
-
-
-def create_order_from_api_response(cctxOrder, botId):
-    return Order(
+def __create_order_from_api_response(cctxOrder, botId):
+    """
+    Parse response api response into object
+    :param cctxOrder: the api response object
+    :param botId: the id of the bot which has fired the request
+    :return: Order object
+    """
+    return Order.objects.create(
         bot_id=botId,
         status=cctxOrder["status"],
         order_id=cctxOrder["id"],
