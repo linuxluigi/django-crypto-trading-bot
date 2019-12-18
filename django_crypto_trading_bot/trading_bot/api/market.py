@@ -30,9 +30,24 @@ def get_or_create_market(response: dict) -> Market:
 
 def update_market(market: Market) -> Market:
     """
-    Update Market Order 
+    Update Market Order
     """
     exchange: Exchange = get_client(exchange_id="binance")
     exchange.load_markets()
     market_exchange: dict = exchange.market(market.symbol)
     return get_or_create_market(market_exchange)
+
+
+def update_all_markets() -> list:
+    """
+    Update all markets
+    :return: list with all updated market objects
+    """
+    update_markets = list()
+    exchange: Exchange = get_client(exchange_id="binance")
+    exchange.load_markets()
+    markets = exchange.markets
+    for market in markets.values():
+        update_markets.append(get_or_create_market(market))
+
+    return update_markets
