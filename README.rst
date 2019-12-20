@@ -13,7 +13,7 @@ Auto crypto trading bot for various exchanges.
      :target: https://travis-ci.com/linuxluigi/django-crypto-trading-bot
      :alt: Travis CI tests
 .. image:: https://readthedocs.org/projects/django-crypto-trading-bot/badge/?version=latest
-     :target: https://django-crypto-trading-botreadthedocs.io/en/latest/?badge=latest
+     :target: https://django-crypto-trading-bot.readthedocs.io/en/latest/?badge=latest
      :alt: Documentation Status
 .. image:: https://coveralls.io/repos/github/linuxluigi/django-crypto-trading-bot/badge.svg?branch=master
      :target: https://coveralls.io/github/linuxluigi/django-crypto-trading-bot?branch=master
