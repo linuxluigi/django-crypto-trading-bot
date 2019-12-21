@@ -45,6 +45,7 @@ class MarketFactory(DjangoModelFactory):
 
     base = SubFactory(TrxCurrencyFactory)
     quote = SubFactory(BnbCurrencyFactory)
+    exchange = "binance"
     active = True
     precision_amount = 0
     precision_price = 6

@@ -16,7 +16,9 @@ def test_get_or_create_market():
     default_market: dict = market_structure()
 
     # assert model
-    market: Market = get_or_create_market(response=default_market)
+    market: Market = get_or_create_market(
+        response=default_market, exchange_id="binance"
+    )
     assert isinstance(market, Market)
     assert market.active == default_market["active"]
     assert isinstance(market.base, Currency)
@@ -62,34 +64,23 @@ def test_update_all_markets():
     exchange.load_markets()
 
     out_of_data_market: Market = OutOfDataMarketFactory()
-    get_or_create_market(response=market_structure_eth_btc())
+    get_or_create_market(response=market_structure_eth_btc(), exchange_id="binance")
 
     # update market
-    updated_markets: list = update_all_markets(exchange)
+    update_all_markets(exchange)
 
-    assert len(updated_markets) == 2
+    # get updatet market from the database
+    updated_market: Market = Market.objects.get(pk=out_of_data_market.pk)
 
     # get market from binance
     market_exchange: dict = exchange.market(out_of_data_market.symbol)
 
-    for updated_market in updated_markets:
-        assert isinstance(updated_market, Market)
+    # assert if values changed
+    assert out_of_data_market.active != updated_market.active
+    assert out_of_data_market.precision_amount != updated_market.precision_amount
+    assert out_of_data_market.precision_price != updated_market.precision_price
 
-        if (
-            updated_market.quote == out_of_data_market.quote
-            and updated_market.base == out_of_data_market.base
-        ):
-            assert out_of_data_market.active != updated_market.active
-            assert (
-                out_of_data_market.precision_amount != updated_market.precision_amount
-            )
-            assert out_of_data_market.precision_price != updated_market.precision_price
-
-            assert updated_market.active == market_exchange["active"]
-            assert (
-                updated_market.precision_amount
-                == market_exchange["precision"]["amount"]
-            )
-            assert (
-                updated_market.precision_price == market_exchange["precision"]["price"]
-            )
+    # assert if value are set to market_exchange
+    assert updated_market.active == market_exchange["active"]
+    assert updated_market.precision_amount == market_exchange["precision"]["amount"]
+    assert updated_market.precision_price == market_exchange["precision"]["price"]

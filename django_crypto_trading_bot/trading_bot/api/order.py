@@ -1,17 +1,17 @@
 from ccxt import Exchange
-from django.utils.datetime_safe import datetime
-
+from decimal import Decimal
+from django.utils import timezone
+from datetime import datetime
 from django_crypto_trading_bot.trading_bot.api.client import get_client
-from django_crypto_trading_bot.trading_bot.models import Currency, Order
+from django_crypto_trading_bot.trading_bot.models import Currency, Order, Bot, Market
+import pytz
 
 
 def create_order(
-    base: Currency, quote: Currency, amount, price, side, botId, isTestOrder
+    amount: Decimal, price: Decimal, side: str, bot: Bot, isTestOrder: bool = False
 ):
     """
     Create an order
-    :param base: base currency
-    :param quote: destination currency
     :param amount: amount you want to buy
     :param price: the price you want to spend
     :param side: sell or buy order?
@@ -19,46 +19,49 @@ def create_order(
     :param isTestOrder: is this a test order?
     :return: Order object
     """
-    exchange: Exchange = get_client(exchange_id="binance")
-    symbol = base.short + "/" + quote.short
+    exchange: Exchange = bot.account.get_account_client()
 
     params = {"test": isTestOrder}  # test if it's valid, but don't actually place it
 
-    cctxOrder = exchange.create_order(symbol, "limit", side, amount, price, params)
-
     if isTestOrder:
+
         return Order.objects.create(
-            bot_id=botId,
+            bot=bot,
             status="open",
             order_id=len(Order.objects.all()) + 1,
             order_type="limit",
             side=side,
-            timestamp=datetime.fromtimestamp(1545730073),
+            timestamp=timezone.now(),
             price=price,
             amount=amount,
             filled=0,
-            fee_currency=quote,
+            fee_currency=bot.market.quote,
             fee_cost=0.0009,
             fee_rate=0.002,
         )
     else:
-        return __create_order_from_api_response(cctxOrder, botId)
+        cctxOrder: dict = exchange.create_order(
+            bot.market.symbol, "limit", side, amount, price, params
+        )
+
+        return create_order_from_api_response(cctxOrder, bot)
 
 
-def __create_order_from_api_response(cctxOrder, botId):
+def create_order_from_api_response(cctxOrder: dict, bot: Bot):
     """
     Parse response api response into object
     :param cctxOrder: the api response object
     :param botId: the id of the bot which has fired the request
     :return: Order object
     """
+    timezone.activate(pytz.timezone("UTC"))
     return Order.objects.create(
-        bot_id=botId,
+        bot=bot,
         status=cctxOrder["status"],
         order_id=cctxOrder["id"],
         order_type=cctxOrder["type"],
         side=cctxOrder["side"],
-        timestamp=cctxOrder["timestamp"],
+        timestamp=datetime.fromtimestamp(cctxOrder["timestamp"]),
         price=cctxOrder["price"],
         amount=cctxOrder["amount"],
         filled=cctxOrder["filled"],
