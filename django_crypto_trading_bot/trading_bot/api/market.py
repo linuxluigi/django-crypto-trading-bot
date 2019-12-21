@@ -1,8 +1,9 @@
 from django_crypto_trading_bot.trading_bot.models import Market, Currency
+from .client import get_client
 from ccxt.base.exchange import Exchange
 
 
-def get_or_create_market(response: dict) -> Market:
+def get_or_create_market(response: dict, exchange_id: str) -> Market:
     """
     update or create a market based on the api json
     """
@@ -10,7 +11,9 @@ def get_or_create_market(response: dict) -> Market:
     quote, create = Currency.objects.get_or_create(short=response["quote"])
 
     try:
-        market: Market = Market.objects.get(base=base, quote=quote)
+        market: Market = Market.objects.get(
+            base=base, quote=quote, exchange=exchange_id
+        )
         market.active = response["active"]
         market.precision_amount = response["precision"]["amount"]
         market.precision_price = response["precision"]["price"]
@@ -22,37 +25,40 @@ def get_or_create_market(response: dict) -> Market:
         return market
 
     except Market.DoesNotExist:
-        market: Market = Market.objects.create(
+        return Market.objects.create(
             base=base,
             quote=quote,
+            exchange=exchange_id,
             active=response["active"],
             precision_amount=response["precision"]["amount"],
             precision_price=response["precision"]["price"],
             limits_amount_min=response["limits"]["amount"]["min"],
             limits_amount_max=response["limits"]["amount"]["max"],
             limits_price_min=response["limits"]["price"]["min"],
-            limits_price_max=response["limits"]["price"]["max"]
+            limits_price_max=response["limits"]["price"]["max"],
         )
-        return market
 
 
-def update_market(market: Market, exchange: Exchange) -> Market:
+def update_market(market: Market, exchange: Exchange = None) -> Market:
     """
     Update Market Order
-    Note: Please pass a client which has preloaded all markets to reduce network requests
+
+    Keyword arguments:
+    market -- market model
+    exchange -- exchange client, preload all markets to reduce requests
+
+    return -> Market, updated market
     """
-    if exchange.markets is None:
-        raise Exception('Please load market data before update market model!')
+    if not exchange:
+        exchange = get_client(exchange_id=market.exchange)
+
     market_exchange: dict = exchange.market(market.symbol)
-    return get_or_create_market(market_exchange)
+    return get_or_create_market(response=market_exchange, exchange_id=market.exchange)
 
 
-def update_all_markets(exchange: Exchange) -> list:
+def update_all_markets(exchange: Exchange):
     """
     Update all markets
-    :return: list with all updated market objects
     """
-    updated_markets = list()
     for market in Market.objects.all():
-        updated_markets.append(update_market(market, exchange))
-    return updated_markets
+        update_market(market, exchange)

@@ -3,14 +3,14 @@ from django_crypto_trading_bot.users.models import User
 from ccxt.base.exchange import Exchange
 from .api.client import get_client
 
+EXCHANGES = (("Binance", "binance"),)
+
 
 class Account(models.Model):
     """
     API Account
     for an exchange like binance
     """
-
-    EXCHANGES = (("Binance", "binance"),)
 
     exchange = models.CharField(max_length=250, choices=EXCHANGES)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -44,6 +44,7 @@ class Market(models.Model):
     base = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="base")
     quote = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="quote")
     active = models.BooleanField(default=True)
+    exchange = models.CharField(max_length=250, choices=EXCHANGES)
     precision_amount = models.IntegerField()
     precision_price = models.IntegerField()
     limits_amount_min = models.FloatField()
@@ -125,12 +126,10 @@ class Trade(models.Model):
     Trade based on https://github.com/ccxt/ccxt/wiki/Manual#trade-structure
     """
 
-    taker_or_maker_choice = (("market", "market"), ("limit", "limit"))
-
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     trade_id = models.CharField(max_length=255, unique=True)
     timestamp = models.DateTimeField()
-    taker_or_maker = models.CharField(max_length=8, choices=taker_or_maker_choice)
+    taker_or_maker = models.CharField(max_length=8, choices=Order.order_type_choice)
     amount = models.DecimalField(max_digits=30, decimal_places=8)
     fee_currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
     fee_cost = models.DecimalField(max_digits=30, decimal_places=8)
