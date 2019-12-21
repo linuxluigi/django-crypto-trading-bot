@@ -31,7 +31,7 @@ def get_or_create_market(response: dict) -> Market:
             limits_amount_min=response["limits"]["amount"]["min"],
             limits_amount_max=response["limits"]["amount"]["max"],
             limits_price_min=response["limits"]["price"]["min"],
-            limits_price_max=response["limits"]["price"]["max"]
+            limits_price_max=response["limits"]["price"]["max"],
         )
         return market
 
@@ -42,7 +42,7 @@ def update_market(market: Market, exchange: Exchange) -> Market:
     Note: Please pass a client which has preloaded all markets to reduce network requests
     """
     if exchange.markets is None:
-        raise Exception('Please load market data before update market model!')
+        raise Exception("Please load market data before update market model!")
     market_exchange: dict = exchange.market(market.symbol)
     return get_or_create_market(market_exchange)
 

@@ -5,32 +5,30 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('trading_bot', '0001_initial'),
-    ]
+    dependencies = [("trading_bot", "0001_initial")]
 
     operations = [
         migrations.AddField(
-            model_name='market',
-            name='limits_amount_max',
+            model_name="market",
+            name="limits_amount_max",
             field=models.FloatField(default=-1),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='market',
-            name='limits_amount_min',
+            model_name="market",
+            name="limits_amount_min",
             field=models.FloatField(default=-1),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='market',
-            name='limits_price_max',
+            model_name="market",
+            name="limits_price_max",
             field=models.FloatField(default=-1),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='market',
-            name='limits_price_min',
+            model_name="market",
+            name="limits_price_min",
             field=models.FloatField(default=-1),
             preserve_default=False,
         ),

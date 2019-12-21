@@ -5,7 +5,9 @@ from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.models import Currency, Order
 
 
-def create_order(base: Currency, quote: Currency, amount, price, side, botId, isTestOrder):
+def create_order(
+    base: Currency, quote: Currency, amount, price, side, botId, isTestOrder
+):
     """
     Create an order
     :param base: base currency
@@ -18,13 +20,11 @@ def create_order(base: Currency, quote: Currency, amount, price, side, botId, is
     :return: Order object
     """
     exchange: Exchange = get_client(exchange_id="binance")
-    symbol = base.short + '/' + quote.short
+    symbol = base.short + "/" + quote.short
 
-    params = {
-        'test': isTestOrder,  # test if it's valid, but don't actually place it
-    }
+    params = {"test": isTestOrder}  # test if it's valid, but don't actually place it
 
-    cctxOrder = exchange.create_order(symbol, 'limit', side, amount, price, params)
+    cctxOrder = exchange.create_order(symbol, "limit", side, amount, price, params)
 
     if isTestOrder:
         return Order.objects.create(
@@ -39,7 +39,7 @@ def create_order(base: Currency, quote: Currency, amount, price, side, botId, is
             filled=0,
             fee_currency=quote,
             fee_cost=0.0009,
-            fee_rate=0.002
+            fee_rate=0.002,
         )
     else:
         return __create_order_from_api_response(cctxOrder, botId)
@@ -64,5 +64,5 @@ def __create_order_from_api_response(cctxOrder, botId):
         filled=cctxOrder["filled"],
         fee_currency=Currency(short=cctxOrder["fee"]["currency"]),
         fee_cost=cctxOrder["fee"]["cost"],
-        fee_rate=cctxOrder["fee"]["rate"]
+        fee_rate=cctxOrder["fee"]["rate"],
     )

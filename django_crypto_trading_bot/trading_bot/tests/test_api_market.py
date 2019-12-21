@@ -4,7 +4,8 @@ from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.api.market import (
     get_or_create_market,
     update_market,
-    update_all_markets)
+    update_all_markets,
+)
 from .api_data_example import market_structure, market_structure_eth_btc
 from django_crypto_trading_bot.trading_bot.models import Market, Currency
 from .factories import OutOfDataMarketFactory
@@ -74,11 +75,21 @@ def test_update_all_markets():
     for updated_market in updated_markets:
         assert isinstance(updated_market, Market)
 
-        if updated_market.quote == out_of_data_market.quote and updated_market.base == out_of_data_market.base:
+        if (
+            updated_market.quote == out_of_data_market.quote
+            and updated_market.base == out_of_data_market.base
+        ):
             assert out_of_data_market.active != updated_market.active
-            assert out_of_data_market.precision_amount != updated_market.precision_amount
+            assert (
+                out_of_data_market.precision_amount != updated_market.precision_amount
+            )
             assert out_of_data_market.precision_price != updated_market.precision_price
 
             assert updated_market.active == market_exchange["active"]
-            assert updated_market.precision_amount == market_exchange["precision"]["amount"]
-            assert updated_market.precision_price == market_exchange["precision"]["price"]
+            assert (
+                updated_market.precision_amount
+                == market_exchange["precision"]["amount"]
+            )
+            assert (
+                updated_market.precision_price == market_exchange["precision"]["price"]
+            )
