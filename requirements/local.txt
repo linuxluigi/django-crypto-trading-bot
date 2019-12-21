@@ -3,6 +3,7 @@
 Werkzeug==0.16.0 # https://github.com/pallets/werkzeug
 ipdb==0.12.3  # https://github.com/gotcha/ipdb
 Sphinx==2.3.0  # https://github.com/sphinx-doc/sphinx
+sphinx-rtd-theme==0.4.3  # https://github.com/readthedocs/sphinx_rtd_theme 
 psycopg2==2.8.3 --no-binary psycopg2  # https://github.com/psycopg/psycopg2
 
 # Testing
@@ -27,5 +28,4 @@ factory-boy==2.12.0  # https://github.com/FactoryBoy/factory_boy
 
 django-debug-toolbar==2.1  # https://github.com/jazzband/django-debug-toolbar
 django-extensions==2.2.5  # https://github.com/django-extensions/django-extensions
-django-coverage-plugin==1.6.0  # https://github.com/nedbat/django_coverage_plugin
 pytest-django==3.7.0  # https://github.com/pytest-dev/pytest-django
