@@ -1,9 +1,6 @@
-from factory import DjangoModelFactory, Faker, post_generation, SubFactory
-from typing import Any, Sequence
-from django_crypto_trading_bot.users.models import User
+from factory import DjangoModelFactory, SubFactory
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 from config.settings.base import env
-import pytest
 
 
 class AccountFactory(DjangoModelFactory):
@@ -51,6 +48,10 @@ class MarketFactory(DjangoModelFactory):
     active = True
     precision_amount = 0
     precision_price = 6
+    limits_amount_min = 0.1
+    limits_amount_max = 1000
+    limits_price_min = 0.1
+    limits_price_max = 1000
 
 
 class OutOfDataMarketFactory(MarketFactory):
@@ -59,12 +60,15 @@ class OutOfDataMarketFactory(MarketFactory):
     active = False
     precision_amount = 10
     precision_price = 10
+    limits_amount_min = 0.1
+    limits_amount_max = 1000
+    limits_price_min = 0.1
+    limits_price_max = 1000
 
 
 class BotFactory(DjangoModelFactory):
     class Meta:
         model = "trading_bot.Bot"
-        django_get_or_create = ["api_key"]
 
     account = SubFactory(AccountFactory)
     market = SubFactory(MarketFactory)
