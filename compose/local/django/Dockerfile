@@ -13,7 +13,7 @@ RUN apk update \
   # Translations dependencies
   && apk add gettext \
   # https://docs.djangoproject.com/en/dev/ref/django-admin/#dbshell
-  && apk add postgresql-client
+  && apk add postgresql-client \
   # git
   && apk add git
 
