@@ -18,6 +18,9 @@ Auto crypto trading bot for various exchanges.
 .. image:: https://coveralls.io/repos/github/linuxluigi/django-crypto-trading-bot/badge.svg?branch=master
      :target: https://coveralls.io/github/linuxluigi/django-crypto-trading-bot?branch=master
      :alt: Coverage
+.. image:: https://api.codacy.com/project/badge/Grade/c6bd668a8e61448b86a15fdb2648cd38?isInternal=true
+     :target: https://www.codacy.com/manual/linuxluigi/django-crypto-trading-bot?utm_source=github.com&utm_medium=referral&utm_content=linuxluigi/django-crypto-trading-bot&utm_campaign=Badge_Grade_Dashboard
+     :alt: Codacy quality
 
 
 :License: MIT
