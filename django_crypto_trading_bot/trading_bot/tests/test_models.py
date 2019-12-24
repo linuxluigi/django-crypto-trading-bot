@@ -17,7 +17,7 @@ def test_get_account_client():
 def test_symbol():
     # check if symbol create the right symbol
     market: Market = MarketFactory()
-    assert "TRX/BNB" == market.symbol
+    market.symbol == assert "TRX/BNB"
 
     # chekc if this symbol works on binance
     account: Account = AccountFactory()
