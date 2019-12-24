@@ -6,9 +6,12 @@ from django_crypto_trading_bot.trading_bot.api.market import (
     update_market,
     update_all_markets,
 )
-from .api_data_example import market_structure, market_structure_eth_btc
 from django_crypto_trading_bot.trading_bot.models import Market, Currency
-from .factories import OutOfDataMarketFactory
+from django_crypto_trading_bot.trading_bot.tests.factories import OutOfDataMarketFactory
+from django_crypto_trading_bot.trading_bot.tests.api_client.api_data_example import (
+    market_structure,
+    market_structure_eth_btc,
+)
 
 
 @pytest.mark.django_db()
