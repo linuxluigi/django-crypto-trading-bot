@@ -1,8 +1,26 @@
 version = 1
 
+exclude_patterns = [
+  "bin/**",
+  "**/node_modules/",
+  "js/*/*.min.js"
+]
+
+test_patterns = [
+  "tests/**",
+  "test_*.py"
+]
+
+
 [[analyzers]]
 name = "python"
 enabled = true
+dependency_file_paths = [
+  "requirements/base.txt",
+  "requirements/local.txt",
+  "requirements/production.txt",
+  "Pipfile"
+]
 
   [analyzers.meta]
   runtime_version = "3.x.x"
