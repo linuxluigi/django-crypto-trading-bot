@@ -31,13 +31,13 @@ install:
   - pip3 install docker-compose wheel
 
 script:
+  # type checks
+  - sudo docker-compose -f local.yml run django coverage run -m mypy django_crypto_trading_bot
   # run tests
   - sudo docker-compose -f local.yml run django coverage run -m pytest
   # test commands
   - sudo docker-compose -f local.yml run django python manage.py migrate
-  # type checks
-  - sudo docker-compose -f local.yml run django coverage run -m mypy django_crypto_trading_bot
-
+  
 # code coverage
 after_success:
   - echo TRAVIS_JOB_ID=$TRAVIS_JOB_ID >> .envs/.local/.django
