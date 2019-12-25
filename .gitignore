@@ -275,3 +275,4 @@ django_crypto_trading_bot/media/
 .env
 .envs/*
 !.envs/.local/
+.vscode/settings.json
