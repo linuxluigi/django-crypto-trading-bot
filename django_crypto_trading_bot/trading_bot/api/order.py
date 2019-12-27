@@ -102,5 +102,5 @@ def update_all_open_orders():
     """
     update all open orders
     """
-    for order in Order.objects.filter(status=Order.status_choice["open"]):
+    for order in Order.objects.filter(status=Order.OPEN):
         get_order_from_exchange(order=order)

@@ -5,16 +5,17 @@ from ccxt.base.exchange import Exchange
 from .api.client import get_client
 
 
-EXCHANGES = (("Binance", "binance"),)
-
-
 class Account(models.Model):
     """
     API Account
     for an exchange like binance
     """
 
-    exchange = models.CharField(max_length=250, choices=EXCHANGES)
+    # Exchnages
+    EXCHANGE_BINANCE = "Binance"
+    EXCHANGES_CHOICE = [(EXCHANGE_BINANCE, EXCHANGE_BINANCE)]
+
+    exchange = models.CharField(max_length=250, choices=EXCHANGES_CHOICE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     api_key = models.CharField(max_length=250)
     secret = models.CharField(max_length=250)
@@ -46,7 +47,7 @@ class Market(models.Model):
     base = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="base")
     quote = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="quote")
     active = models.BooleanField(default=True)
-    exchange = models.CharField(max_length=250, choices=EXCHANGES)
+    exchange = models.CharField(max_length=250, choices=Account.EXCHANGES_CHOICE)
     precision_amount = models.IntegerField()
     precision_price = models.IntegerField()
     limits_amount_min = models.FloatField()
@@ -97,22 +98,43 @@ class Order(models.Model):
     Order based on https://github.com/ccxt/ccxt/wiki/Manual#order-structure
     """
 
-    status_choice = (
-        ("open", "open"),
-        ("closed", "closed"),
-        ("canceled", "canceled"),
-        ("expired", "expired"),
-        ("rejected", "rejected"),
-    )
-    order_type_choice = (("market", "market"), ("limit", "limit"))
-    side_choice = (("buy", "buy"), ("sell", "sell"))
+    # STATUS_CHOICE
+    OPEN = "open"
+    CLOSED = "closed"
+    CANCELED = "canceled"
+    EXPIRED = "expired"
+    REJECTED = "rejected"
+
+    STATUS_CHOICE = [
+        (OPEN, OPEN),
+        (CLOSED, CLOSED),
+        (CANCELED, CANCELED),
+        (EXPIRED, EXPIRED),
+        (REJECTED, REJECTED),
+    ]
+
+    # ORDER_TYPE_CHOICE
+    MARKET = "market"
+    LIMIT = "limit"
+    ORDER_TYPE_CHOICE = [
+        (MARKET, MARKET),
+        (LIMIT, LIMIT),
+    ]
+
+    # SIDE_CHOICE
+    SIDE_BUY = "buy"
+    SIDE_SELL = "sell"
+    SIDE_CHOICE = [
+        (SIDE_BUY, SIDE_BUY),
+        (SIDE_SELL, SIDE_SELL),
+    ]
 
     bot = models.ForeignKey(Bot, on_delete=models.CASCADE)
     order_id = models.CharField(max_length=255, unique=True)
     timestamp = models.DateTimeField()
-    status = models.CharField(max_length=10, choices=status_choice, default="open")
-    order_type = models.CharField(max_length=8, choices=order_type_choice)
-    side = models.CharField(max_length=4, choices=side_choice)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICE, default="open")
+    order_type = models.CharField(max_length=8, choices=ORDER_TYPE_CHOICE)
+    side = models.CharField(max_length=4, choices=SIDE_CHOICE)
     price = models.DecimalField(max_digits=30, decimal_places=8)
     amount = models.DecimalField(max_digits=30, decimal_places=8)
     filled = models.DecimalField(max_digits=30, decimal_places=8, default=0)
@@ -137,7 +159,7 @@ class Trade(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     trade_id = models.CharField(max_length=255, unique=True)
     timestamp = models.DateTimeField()
-    taker_or_maker = models.CharField(max_length=8, choices=Order.order_type_choice)
+    taker_or_maker = models.CharField(max_length=8, choices=Order.ORDER_TYPE_CHOICE)
     amount = models.DecimalField(max_digits=30, decimal_places=8)
     fee_currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
     fee_cost = models.DecimalField(max_digits=30, decimal_places=8)
