@@ -70,9 +70,6 @@ class Market(models.Model):
     def quoteId(self):
         return self.quote.short.lower()
 
-    def update(self) -> Market:
-        return update_market(market=self)
-
     def __str__(self) -> str:
         return self.symbol
 
