@@ -76,6 +76,9 @@ def update_order_from_api_response(cctx_order: dict, order: Order) -> Order:
     """
     Parse API response to update a order object
     """
+    if order.status == Order.REORDERD:
+        # todo do not change order when already reorderd
+        return order
     if order.status != cctx_order["status"]:
         # todo trigger event when status changed
         pass

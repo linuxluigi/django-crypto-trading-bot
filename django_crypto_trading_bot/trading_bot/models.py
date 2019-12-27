@@ -3,6 +3,7 @@ from django.db import models
 from django_crypto_trading_bot.users.models import User
 from ccxt.base.exchange import Exchange
 from .api.client import get_client
+from decimal import Decimal
 
 
 class Account(models.Model):
@@ -50,10 +51,10 @@ class Market(models.Model):
     exchange = models.CharField(max_length=250, choices=Account.EXCHANGES_CHOICE)
     precision_amount = models.IntegerField()
     precision_price = models.IntegerField()
-    limits_amount_min = models.FloatField()
-    limits_amount_max = models.FloatField()
-    limits_price_min = models.FloatField()
-    limits_price_max = models.FloatField()
+    limits_amount_min = models.DecimalField(max_digits=30, decimal_places=8)
+    limits_amount_max = models.DecimalField(max_digits=30, decimal_places=8)
+    limits_price_min = models.DecimalField(max_digits=30, decimal_places=8)
+    limits_price_max = models.DecimalField(max_digits=30, decimal_places=8)
 
     @property
     def symbol(self):
@@ -104,6 +105,7 @@ class Order(models.Model):
     CANCELED = "canceled"
     EXPIRED = "expired"
     REJECTED = "rejected"
+    REORDERD = "reorderd"
 
     STATUS_CHOICE = [
         (OPEN, OPEN),
@@ -111,6 +113,7 @@ class Order(models.Model):
         (CANCELED, CANCELED),
         (EXPIRED, EXPIRED),
         (REJECTED, REJECTED),
+        (REORDERD, REORDERD),
     ]
 
     # ORDER_TYPE_CHOICE
@@ -135,19 +138,44 @@ class Order(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICE, default="open")
     order_type = models.CharField(max_length=8, choices=ORDER_TYPE_CHOICE)
     side = models.CharField(max_length=4, choices=SIDE_CHOICE)
-    price = models.DecimalField(max_digits=30, decimal_places=8)
-    amount = models.DecimalField(max_digits=30, decimal_places=8)
-    filled = models.DecimalField(max_digits=30, decimal_places=8, default=0)
+    price = models.DecimalField(max_digits=30, decimal_places=8)  # quote currency
+    amount = models.DecimalField(
+        max_digits=30, decimal_places=8
+    )  # ordered amount of base currency
+    filled = models.DecimalField(
+        max_digits=30, decimal_places=8, default=0
+    )  # filled amount of base currency
     fee_currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
     fee_cost = models.DecimalField(max_digits=30, decimal_places=8)
     fee_rate = models.DecimalField(
         max_digits=30, decimal_places=8, blank=True, null=True
     )
 
-    def remaining(self) -> str:
+    def order_amount(self) -> Decimal:
+        """
+        get order amount for retrade
+        """
+        if self.side == self.SIDE_BUY:
+            if self.fee_currency == self.bot.market.base:
+                return self.amount - self.fee_cost
+            else:
+                return self.amount
+        else:
+            if self.fee_currency == self.bot.market.quote:
+                return self.cost - self.fee_cost
+            else:
+                return self.cost
+
+    def remaining(self) -> Decimal:
+        """
+        remaining amount to fill
+        """
         return self.amount - self.filled
 
-    def cost(self) -> str:
+    def cost(self) -> Decimal:
+        """
+        'filled' * 'price' (filling price used where available)
+        """
         return self.filled * self.price
 
 

@@ -1,6 +1,7 @@
 from factory import DjangoModelFactory, SubFactory
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 from config.settings.base import env
+from decimal import Decimal
 
 
 class AccountFactory(DjangoModelFactory):
@@ -49,10 +50,10 @@ class MarketFactory(DjangoModelFactory):
     active = True
     precision_amount = 0
     precision_price = 6
-    limits_amount_min = 0.1
-    limits_amount_max = 1000
-    limits_price_min = 0.1
-    limits_price_max = 1000
+    limits_amount_min = Decimal(0.1)
+    limits_amount_max = Decimal(1000)
+    limits_price_min = Decimal(0.1)
+    limits_price_max = Decimal(1000)
 
 
 class OutOfDataMarketFactory(MarketFactory):
@@ -61,10 +62,10 @@ class OutOfDataMarketFactory(MarketFactory):
     active = False
     precision_amount = 10
     precision_price = 10
-    limits_amount_min = 0.1
-    limits_amount_max = 1000
-    limits_price_min = 0.1
-    limits_price_max = 1000
+    limits_amount_min = Decimal(0.1)
+    limits_amount_max = Decimal(1000)
+    limits_price_min = Decimal(0.1)
+    limits_price_max = Decimal(1000)
 
 
 class BotFactory(DjangoModelFactory):
