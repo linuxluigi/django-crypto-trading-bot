@@ -1,7 +1,9 @@
+from __future__ import annotations
 from django.db import models
 from django_crypto_trading_bot.users.models import User
 from ccxt.base.exchange import Exchange
 from .api.client import get_client
+
 
 EXCHANGES = (("Binance", "binance"),)
 
@@ -68,6 +70,9 @@ class Market(models.Model):
     def quoteId(self):
         return self.quote.short.lower()
 
+    def update(self) -> Market:
+        return update_market(market=self)
+
     def __str__(self) -> str:
         return self.symbol
 
@@ -95,7 +100,13 @@ class Order(models.Model):
     Order based on https://github.com/ccxt/ccxt/wiki/Manual#order-structure
     """
 
-    status_choice = (("open", "open"), ("closed", "closed"), ("canceled", "canceled"))
+    status_choice = (
+        ("open", "open"),
+        ("closed", "closed"),
+        ("canceled", "canceled"),
+        ("expired", "expired"),
+        ("rejected", "rejected"),
+    )
     order_type_choice = (("market", "market"), ("limit", "limit"))
     side_choice = (("buy", "buy"), ("sell", "sell"))
 

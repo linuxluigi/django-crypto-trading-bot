@@ -1,3 +1,4 @@
+from __future__ import annotations
 from django_crypto_trading_bot.trading_bot.models import Market, Currency
 from .client import get_client
 from ccxt.base.exchange import Exchange

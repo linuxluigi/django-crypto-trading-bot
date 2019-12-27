@@ -5,8 +5,11 @@ from decimal import Decimal
 from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.api.market import get_or_create_market
 from django_crypto_trading_bot.trading_bot.api.order import create_order
-from django_crypto_trading_bot.trading_bot.models import Order, Market
-from django_crypto_trading_bot.trading_bot.tests.factories import BotFactory
+from django_crypto_trading_bot.trading_bot.models import Order, Market, Bot
+from django_crypto_trading_bot.trading_bot.tests.factories import (
+    AccountFactory,
+    BotFactory,
+)
 
 
 @pytest.mark.django_db()
