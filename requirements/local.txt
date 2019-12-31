@@ -18,7 +18,7 @@ flake8==3.7.9  # https://github.com/PyCQA/flake8
 black==19.10b0  # https://github.com/ambv/black
 pylint-django==2.0.13  # https://github.com/PyCQA/pylint-django
 pre-commit==1.20.0  # https://github.com/pre-commit/pre-commit
-coveralls==1.9.2  # https://github.com/coveralls-clients/coveralls-python
+coveralls==1.10.0  # https://github.com/coveralls-clients/coveralls-python
 django_coverage_plugin==1.6.0  # https://github.com/nedbat/django_coverage_plugin
 
 # Django
