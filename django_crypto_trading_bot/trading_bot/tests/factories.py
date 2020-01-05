@@ -2,6 +2,8 @@ from factory import DjangoModelFactory, SubFactory
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 from config.settings.base import env
 from decimal import Decimal
+from django.utils import timezone
+from django_crypto_trading_bot.trading_bot.models import Order
 
 
 class AccountFactory(DjangoModelFactory):
@@ -48,8 +50,8 @@ class MarketFactory(DjangoModelFactory):
     quote = SubFactory(BnbCurrencyFactory)
     exchange = "binance"
     active = True
-    precision_amount = 0
-    precision_price = 6
+    precision_amount = 3
+    precision_price = 4
     limits_amount_min = Decimal(0.1)
     limits_amount_max = Decimal(1000)
     limits_price_min = Decimal(0.1)
@@ -75,3 +77,27 @@ class BotFactory(DjangoModelFactory):
     account = SubFactory(AccountFactory)
     market = SubFactory(MarketFactory)
     day_span = 1
+
+
+class BuyOrderFactory(DjangoModelFactory):
+    class Meta:
+        model = "trading_bot.Order"
+        django_get_or_create = ["order_id"]
+
+    bot = SubFactory(BotFactory)
+    order_id = "1"
+    timestamp = timezone.now()
+    status = Order.CLOSED
+    order_type = Order.LIMIT
+    side = Order.SIDE_BUY
+    price = 1
+    amount = 100
+    filled = 100
+    fee_currency = SubFactory(BnbCurrencyFactory)
+    fee_cost = 1
+    fee_rate = 1
+
+
+class SellOrderFactory(BuyOrderFactory):
+    order_id = "2"
+    side = Order.SIDE_SELL

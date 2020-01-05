@@ -151,21 +151,6 @@ class Order(models.Model):
         max_digits=30, decimal_places=8, blank=True, null=True
     )
 
-    def order_amount(self) -> Decimal:
-        """
-        get order amount for retrade
-        """
-        if self.side == self.SIDE_BUY:
-            if self.fee_currency == self.bot.market.base:
-                return self.amount - self.fee_cost
-            else:
-                return self.amount
-        else:
-            if self.fee_currency == self.bot.market.quote:
-                return self.cost - self.fee_cost
-            else:
-                return self.cost
-
     def remaining(self) -> Decimal:
         """
         remaining amount to fill
@@ -177,6 +162,31 @@ class Order(models.Model):
         'filled' * 'price' (filling price used where available)
         """
         return self.filled * self.price
+
+    def base_amount(self) -> Decimal:
+        """
+        Get base amount minus cost
+        
+        Returns:
+            Decimal -- [description]
+        """
+
+        if self.bot.market.base == self.fee_currency:
+            return self.filled - self.fee_cost
+
+        return self.filled
+
+    def quote_amount(self) -> Decimal:
+        """
+        Get quote amount minus cost
+        
+        Returns:
+            Decimal -- [description]
+        """
+        if self.bot.market.quote == self.fee_currency:
+            return self.cost() - self.fee_cost
+
+        return self.cost
 
 
 class Trade(models.Model):
