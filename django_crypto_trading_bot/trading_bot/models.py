@@ -150,6 +150,7 @@ class Order(models.Model):
     fee_rate = models.DecimalField(
         max_digits=30, decimal_places=8, blank=True, null=True
     )
+    reorder = models.ForeignKey("self", blank=True, null=True, on_delete=models.CASCADE)
 
     def remaining(self) -> Decimal:
         """

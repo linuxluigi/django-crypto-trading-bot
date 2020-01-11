@@ -1,20 +1,15 @@
 import pytest
+from django_crypto_trading_bot.trading_bot.models import Order
 from django_crypto_trading_bot.trading_bot.trade_logic import TradeLogic
 from django_crypto_trading_bot.trading_bot.tests.factories import (
     BuyOrderFactory,
     SellOrderFactory,
 )
+from django_crypto_trading_bot.trading_bot.exceptions import (
+    InsufficientTradingAmount,
+    TickerWasNotSet,
+)
 from decimal import Decimal
-
-
-@pytest.fixture
-def trade_logic_sell() -> TradeLogic:
-    return TradeLogic(order=SellOrderFactory())
-
-
-@pytest.fixture
-def trade_logic_buy() -> TradeLogic:
-    return TradeLogic(order=BuyOrderFactory())
 
 
 @pytest.mark.django_db()
@@ -29,8 +24,8 @@ def test_min_profit_price(trade_logic_sell: TradeLogic, trade_logic_buy: TradeLo
 @pytest.mark.django_db()
 def test_trade_price(trade_logic_sell: TradeLogic, trade_logic_buy: TradeLogic):
     # set high & low to use it instead of min profit
-    trade_logic_sell.low = 0.1
-    trade_logic_buy.high = 10
+    trade_logic_sell.ticker_low = 0.1
+    trade_logic_buy.ticker_high = 10
 
     # check if high & low was triggert
     assert trade_logic_sell.trade_price() == 0.1
@@ -162,3 +157,33 @@ def test_filter_price(trade_logic_sell: TradeLogic, trade_logic_buy: TradeLogic)
     assert trade_logic_sell.filter_price(price=Decimal(1001)) == round(
         Decimal(1000), precision_price
     )
+
+
+@pytest.mark.django_db()
+def test_create_reorder(trade_logic_sell: TradeLogic, trade_logic_buy: TradeLogic):
+
+    # test with no ticker was set
+    with pytest.raises(TickerWasNotSet):
+        trade_logic_sell.create_reorder(simulation=True)
+
+    # set ticker
+    trade_logic_sell.ticker_high = Decimal(10)
+    trade_logic_sell.ticker_low = Decimal(10)
+    trade_logic_buy.ticker_high = Decimal(10)
+    trade_logic_sell.ticker_low = Decimal(10)
+
+    # create reorders
+    reoder_buy: Order = trade_logic_sell.create_reorder(simulation=True)
+    reoder_sell: Order = trade_logic_buy.create_reorder(simulation=True)
+
+    # check if reorder are valid
+    assert reoder_sell.side == Order.SIDE_SELL
+    assert reoder_sell.amount == Decimal(100)
+    assert reoder_buy.side == Order.SIDE_BUY
+    assert reoder_buy.amount == Decimal(110)
+
+    # test with insufficient trading amount
+    trade_logic_sell.order.filled = Decimal(0)
+    with pytest.raises(InsufficientTradingAmount):
+        trade_logic_sell.create_reorder(simulation=True)
+

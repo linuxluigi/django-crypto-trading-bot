@@ -1,7 +1,9 @@
 from decimal import Decimal
 from django_crypto_trading_bot.trading_bot.models import Market, Bot, Order
+from django_crypto_trading_bot.trading_bot.api.order import create_order
 from typing import List
 from ccxt.base.exchange import Exchange
+from .exceptions import InsufficientTradingAmount, TickerWasNotSet
 
 
 class TradeLogic:
@@ -9,12 +11,21 @@ class TradeLogic:
     create trade logic
     """
 
-    def __init__(self, order: Order):
+    def __init__(
+        self,
+        order: Order,
+        ticker_low: Decimal = Decimal(-1.0),
+        ticker_high: Decimal = Decimal(0),
+    ):
         """
         Create trading logic
         
         Arguments:
-            order {Order} -- [description]
+            order {Order} -- fulfilled order
+        
+        Keyword Arguments:
+            ticker_low {Decimal} -- Ticker low price (default: {Decimal(-1.0)})
+            ticker_high {Decimal} -- Ticker high price (default: {Decimal(0)})
         """
         self.order: Order = order
         self.amount_buy: Decimal = Decimal(0)
@@ -24,14 +35,61 @@ class TradeLogic:
         self.client: Exchange = order.bot.account.get_account_client()
 
         # ticker
-        self.low: Decimal = Decimal(-1.0)
-        self.high: Decimal = Decimal(0.0)
+        self.ticker_low: Decimal = ticker_low
+        self.ticker_high: Decimal = ticker_high
+
+    def create_reorder(self, simulation: bool = False) -> Order:
+        """
+        create a reorder if possible
+        
+        Keyword Arguments:
+            simulation {bool} -- if true, it will not create a real order (default: {False})
+        
+        Raises:
+            InsufficientTradingAmount: raise when the current order has insufficient trading amount
+            TickerWasNotSet: raise when try to create a reader with to set a ticker first
+        
+        Returns:
+            Order -- new reorder
+        """
+
+        if self.ticker_low <= Decimal(0) and self.ticker_high <= Decimal(0):
+            raise TickerWasNotSet("Ticker was not set!")
+
+        trade_price: Decimal = self.filter_price(self.trade_price())
+        retrade_amount: Decimal = self.filter_amount(
+            self.retrade_amount(price=trade_price)
+        )
+        if self.order.side == Order.SIDE_BUY:
+            side: str = Order.SIDE_SELL
+        else:
+            side: str = Order.SIDE_BUY
+
+        if retrade_amount <= Decimal(0):
+            raise InsufficientTradingAmount(
+                "Insufficient trading amount for {}".format(self.order.order_id)
+            )
+
+        reorder: Order = create_order(
+            amount=retrade_amount,
+            price=trade_price,
+            side=side,
+            bot=self.order.bot,
+            isTestOrder=simulation,
+        )
+
+        self.order.reorder = reorder
+        self.order.save()
+
+        return reorder
 
     def min_profit_price(self) -> Decimal:
         """
         set min profit for retrade
         """
-        min_profit: Decimal = self.order.price / 100 * self.order.bot.min_profit
+        min_profit: Decimal = Decimal(
+            self.order.price / 100 * self.order.bot.min_profit
+        )
 
         # set min buy profit
         if self.order.side == Order.SIDE_SELL:
@@ -43,16 +101,16 @@ class TradeLogic:
     def trade_price(self) -> Decimal:
         # sell price
         if self.order.side == Order.SIDE_BUY:
-            if self.high < self.min_profit_price():
+            if self.ticker_high < self.min_profit_price():
                 return self.min_profit_price()
             else:
-                return self.high
+                return self.ticker_high
 
         # buy price
-        if self.low > self.min_profit_price():
+        if self.ticker_low > self.min_profit_price():
             return self.min_profit_price()
         else:
-            return self.low
+            return self.ticker_low
 
     def set_min_max_price(self, price: Decimal) -> Decimal:
         """
@@ -147,11 +205,11 @@ class TradeLogic:
             tick_high: Decimal = Decimal(tick[2])
             tick_low: Decimal = Decimal(tick[3])
             # set high
-            if self.high < tick_high:
-                self.high = tick_high
+            if self.ticker_high < tick_high:
+                self.ticker_high = tick_high
 
-            if self.low == -1:
-                self.low = tick_low
+            if self.ticker_low == -1:
+                self.ticker_low = tick_low
             else:
-                if self.low > tick_low:
-                    self.low = tick_low
+                if self.ticker_low > tick_low:
+                    self.ticker_low = tick_low

@@ -35,10 +35,10 @@ def create_order(
             timestamp=timezone.now(),
             price=price,
             amount=amount,
-            filled=0,
+            filled=Decimal(0),
             fee_currency=bot.market.quote,
-            fee_cost=0.0009,
-            fee_rate=0.002,
+            fee_cost=price * amount * Decimal(0.001),
+            fee_rate=Decimal(0.1),
         )
     else:
         cctx_order: dict = exchange.create_order(
