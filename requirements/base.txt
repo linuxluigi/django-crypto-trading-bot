@@ -19,4 +19,4 @@ djangorestframework==3.11.0  # https://github.com/encode/django-rest-framework
 coreapi==2.3.3  # https://github.com/core-api/python-client
 
 # trading bot
-ccxt==1.21.11  # https://github.com/ccxt/ccxt
+ccxt==1.22.80  # https://github.com/ccxt/ccxt
