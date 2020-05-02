@@ -1,9 +1,13 @@
 from __future__ import annotations
-from django.db import models
-from django_crypto_trading_bot.users.models import User
-from ccxt.base.exchange import Exchange
-from .api.client import get_client
+
 from decimal import Decimal
+
+from ccxt.base.exchange import Exchange
+from django.db import models
+
+from django_crypto_trading_bot.users.models import User
+
+from .api.client import get_client
 
 
 class Account(models.Model):

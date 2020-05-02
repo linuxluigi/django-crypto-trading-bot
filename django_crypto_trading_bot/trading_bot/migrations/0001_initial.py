@@ -15,86 +15,257 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Account',
+            name="Account",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('exchange', models.CharField(choices=[('Binance', 'Binance')], max_length=250)),
-                ('api_key', models.CharField(max_length=250)),
-                ('secret', models.CharField(max_length=250)),
-                ('password', models.CharField(blank=True, max_length=250, null=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "exchange",
+                    models.CharField(choices=[("Binance", "Binance")], max_length=250),
+                ),
+                ("api_key", models.CharField(max_length=250)),
+                ("secret", models.CharField(max_length=250)),
+                ("password", models.CharField(blank=True, max_length=250, null=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Bot',
+            name="Bot",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('day_span', models.IntegerField(default=30)),
-                ('min_profit', models.DecimalField(decimal_places=2, default=0.1, max_digits=30)),
-                ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='trading_bot.Account')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("day_span", models.IntegerField(default=30)),
+                (
+                    "min_profit",
+                    models.DecimalField(decimal_places=2, default=0.1, max_digits=30),
+                ),
+                (
+                    "account",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="trading_bot.Account",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Currency',
+            name="Currency",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(blank=True, max_length=50, null=True)),
-                ('short', models.CharField(max_length=50, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(blank=True, max_length=50, null=True)),
+                ("short", models.CharField(max_length=50, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Order',
+            name="Order",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order_id', models.CharField(max_length=255, unique=True)),
-                ('timestamp', models.DateTimeField()),
-                ('status', models.CharField(choices=[('open', 'open'), ('closed', 'closed'), ('canceled', 'canceled'), ('expired', 'expired'), ('rejected', 'rejected'), ('reorderd', 'reorderd')], default='open', max_length=10)),
-                ('order_type', models.CharField(choices=[('market', 'market'), ('limit', 'limit')], max_length=8)),
-                ('side', models.CharField(choices=[('buy', 'buy'), ('sell', 'sell')], max_length=4)),
-                ('price', models.DecimalField(decimal_places=8, max_digits=30)),
-                ('amount', models.DecimalField(decimal_places=8, max_digits=30)),
-                ('filled', models.DecimalField(decimal_places=8, default=0, max_digits=30)),
-                ('fee_cost', models.DecimalField(decimal_places=8, max_digits=30)),
-                ('fee_rate', models.DecimalField(blank=True, decimal_places=8, max_digits=30, null=True)),
-                ('bot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='trading_bot.Bot')),
-                ('fee_currency', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='trading_bot.Currency')),
-                ('reorder', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='trading_bot.Order')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("order_id", models.CharField(max_length=255, unique=True)),
+                ("timestamp", models.DateTimeField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("open", "open"),
+                            ("closed", "closed"),
+                            ("canceled", "canceled"),
+                            ("expired", "expired"),
+                            ("rejected", "rejected"),
+                            ("reorderd", "reorderd"),
+                        ],
+                        default="open",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "order_type",
+                    models.CharField(
+                        choices=[("market", "market"), ("limit", "limit")], max_length=8
+                    ),
+                ),
+                (
+                    "side",
+                    models.CharField(
+                        choices=[("buy", "buy"), ("sell", "sell")], max_length=4
+                    ),
+                ),
+                ("price", models.DecimalField(decimal_places=8, max_digits=30)),
+                ("amount", models.DecimalField(decimal_places=8, max_digits=30)),
+                (
+                    "filled",
+                    models.DecimalField(decimal_places=8, default=0, max_digits=30),
+                ),
+                ("fee_cost", models.DecimalField(decimal_places=8, max_digits=30)),
+                (
+                    "fee_rate",
+                    models.DecimalField(
+                        blank=True, decimal_places=8, max_digits=30, null=True
+                    ),
+                ),
+                (
+                    "bot",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="trading_bot.Bot",
+                    ),
+                ),
+                (
+                    "fee_currency",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="trading_bot.Currency",
+                    ),
+                ),
+                (
+                    "reorder",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="trading_bot.Order",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Trade',
+            name="Trade",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('trade_id', models.CharField(max_length=255, unique=True)),
-                ('timestamp', models.DateTimeField()),
-                ('taker_or_maker', models.CharField(choices=[('market', 'market'), ('limit', 'limit')], max_length=8)),
-                ('amount', models.DecimalField(decimal_places=8, max_digits=30)),
-                ('fee_cost', models.DecimalField(decimal_places=8, max_digits=30)),
-                ('fee_rate', models.DecimalField(blank=True, decimal_places=8, max_digits=30, null=True)),
-                ('fee_currency', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='trading_bot.Currency')),
-                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='trading_bot.Order')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("trade_id", models.CharField(max_length=255, unique=True)),
+                ("timestamp", models.DateTimeField()),
+                (
+                    "taker_or_maker",
+                    models.CharField(
+                        choices=[("market", "market"), ("limit", "limit")], max_length=8
+                    ),
+                ),
+                ("amount", models.DecimalField(decimal_places=8, max_digits=30)),
+                ("fee_cost", models.DecimalField(decimal_places=8, max_digits=30)),
+                (
+                    "fee_rate",
+                    models.DecimalField(
+                        blank=True, decimal_places=8, max_digits=30, null=True
+                    ),
+                ),
+                (
+                    "fee_currency",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="trading_bot.Currency",
+                    ),
+                ),
+                (
+                    "order",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="trading_bot.Order",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Market',
+            name="Market",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('active', models.BooleanField(default=True)),
-                ('exchange', models.CharField(choices=[('Binance', 'Binance')], max_length=250)),
-                ('precision_amount', models.IntegerField()),
-                ('precision_price', models.IntegerField()),
-                ('limits_amount_min', models.DecimalField(decimal_places=8, max_digits=30)),
-                ('limits_amount_max', models.DecimalField(decimal_places=8, max_digits=30)),
-                ('limits_price_min', models.DecimalField(decimal_places=8, max_digits=30)),
-                ('limits_price_max', models.DecimalField(decimal_places=8, max_digits=30)),
-                ('base', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='base', to='trading_bot.Currency')),
-                ('quote', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='quote', to='trading_bot.Currency')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("active", models.BooleanField(default=True)),
+                (
+                    "exchange",
+                    models.CharField(choices=[("Binance", "Binance")], max_length=250),
+                ),
+                ("precision_amount", models.IntegerField()),
+                ("precision_price", models.IntegerField()),
+                (
+                    "limits_amount_min",
+                    models.DecimalField(decimal_places=8, max_digits=30),
+                ),
+                (
+                    "limits_amount_max",
+                    models.DecimalField(decimal_places=8, max_digits=30),
+                ),
+                (
+                    "limits_price_min",
+                    models.DecimalField(decimal_places=8, max_digits=30),
+                ),
+                (
+                    "limits_price_max",
+                    models.DecimalField(decimal_places=8, max_digits=30),
+                ),
+                (
+                    "base",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="base",
+                        to="trading_bot.Currency",
+                    ),
+                ),
+                (
+                    "quote",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="quote",
+                        to="trading_bot.Currency",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='bot',
-            name='market',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='trading_bot.Market'),
+            model_name="bot",
+            name="market",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="trading_bot.Market"
+            ),
         ),
     ]

@@ -1,9 +1,11 @@
-from factory import DjangoModelFactory, SubFactory
-from django_crypto_trading_bot.users.tests.factories import UserFactory
-from config.settings.base import env
 from decimal import Decimal
+
+from config.settings.base import env
 from django.utils import timezone
+from factory import DjangoModelFactory, SubFactory
+
 from django_crypto_trading_bot.trading_bot.models import Order
+from django_crypto_trading_bot.users.tests.factories import UserFactory
 
 
 class AccountFactory(DjangoModelFactory):
@@ -29,6 +31,11 @@ class TrxCurrencyFactory(DjangoModelFactory):
 class BnbCurrencyFactory(TrxCurrencyFactory):
     name = "Binance Coin"
     short = "BNB"
+
+
+class EurCurrencyFactory(TrxCurrencyFactory):
+    name = "Euro"
+    short = "EUR"
 
 
 class BtcCurrencyFactory(TrxCurrencyFactory):

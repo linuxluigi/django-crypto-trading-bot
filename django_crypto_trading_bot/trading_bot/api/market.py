@@ -1,7 +1,12 @@
 from __future__ import annotations
-from django_crypto_trading_bot.trading_bot.models import Market, Currency
-from .client import get_client
+
+from typing import List
+
 from ccxt.base.exchange import Exchange
+
+from django_crypto_trading_bot.trading_bot.models import Currency, Market
+
+from .client import get_client
 
 
 def get_or_create_market(response: dict, exchange_id: str) -> Market:
@@ -63,3 +68,25 @@ def update_all_markets(exchange: Exchange):
     """
     for market in Market.objects.all():
         update_market(market, exchange)
+
+
+def get_all_markets_from_exchange(exchange_id: str) -> List[Market]:
+    """
+    Load all markets from an exchange into the database
+    
+    Arguments:
+        exchange_id {str} -- exchange name like "binance"
+    
+    Returns:
+        List[Market] -- All Markets from the exchange as model
+    """
+
+    exchange = get_client(exchange_id=exchange_id)
+    exchange.load_markets()
+
+    markets: List[Market] = []
+
+    for market in exchange.markets.values():
+        markets.append(get_or_create_market(response=market, exchange_id=exchange_id))
+
+    return markets

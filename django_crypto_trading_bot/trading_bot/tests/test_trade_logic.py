@@ -186,4 +186,3 @@ def test_create_reorder(trade_logic_sell: TradeLogic, trade_logic_buy: TradeLogi
     trade_logic_sell.order.filled = Decimal(0)
     with pytest.raises(InsufficientTradingAmount):
         trade_logic_sell.create_reorder(simulation=True)
-

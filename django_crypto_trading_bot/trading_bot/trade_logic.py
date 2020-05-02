@@ -1,8 +1,11 @@
 from decimal import Decimal
-from django_crypto_trading_bot.trading_bot.models import Market, Bot, Order
-from django_crypto_trading_bot.trading_bot.api.order import create_order
 from typing import List
+
 from ccxt.base.exchange import Exchange
+
+from django_crypto_trading_bot.trading_bot.api.order import create_order
+from django_crypto_trading_bot.trading_bot.models import Bot, Market, Order
+
 from .exceptions import InsufficientTradingAmount, TickerWasNotSet
 
 
