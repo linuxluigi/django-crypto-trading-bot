@@ -1,9 +1,9 @@
 from django.urls import path
 
 from django_crypto_trading_bot.users.views import (
+    user_detail_view,
     user_redirect_view,
     user_update_view,
-    user_detail_view,
 )
 
 app_name = "users"

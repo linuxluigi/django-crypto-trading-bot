@@ -11,6 +11,7 @@ from django_crypto_trading_bot.trading_bot.tests.factories import (
     TrxCurrencyFactory)
 
 
+@pytest.mark.django_db()
 def test_get_tickert(simulation: Simulation):
     # get ticker
 

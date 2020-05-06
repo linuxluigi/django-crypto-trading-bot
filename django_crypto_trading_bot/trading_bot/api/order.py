@@ -1,11 +1,14 @@
 from __future__ import annotations
-from ccxt import Exchange
-from decimal import Decimal
-from django.utils import timezone
+
 from datetime import datetime
-from django_crypto_trading_bot.trading_bot.api.client import get_client
-from django_crypto_trading_bot.trading_bot.models import Currency, Order, Bot, Market
+from decimal import Decimal
+
 import pytz
+from ccxt import Exchange
+from django.utils import timezone
+
+from django_crypto_trading_bot.trading_bot.api.client import get_client
+from django_crypto_trading_bot.trading_bot.models import Bot, Currency, Market, Order
 
 
 def create_order(

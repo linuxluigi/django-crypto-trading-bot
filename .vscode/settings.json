@@ -1,5 +1,12 @@
 {
-    "python.pythonPath": "venv/bin/python",
-    "python.linting.pylintEnabled": true,
-    "python.formatting.provider": "black",
+  "python.pythonPath": "venv/bin/python",
+  "python.linting.pylintEnabled": true,
+  "python.formatting.provider": "black",
+  "cSpell.words": [
+    "BINANCE",
+    "OHLCV",
+    "pytest",
+    "pytz",
+    "reorderd"
+  ]
 }

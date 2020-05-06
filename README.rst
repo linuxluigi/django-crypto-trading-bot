@@ -24,7 +24,7 @@ Auto crypto trading bot for various exchanges.
 .. image:: https://static.deepsource.io/deepsource-badge-light.svg
      :target: https://deepsource.io/gh/linuxluigi/django-crypto-trading-bot/?ref=repository-badge
      :alt: DeepSource
-    
+
 
 :License: MIT
 

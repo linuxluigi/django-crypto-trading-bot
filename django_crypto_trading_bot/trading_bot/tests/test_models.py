@@ -1,7 +1,9 @@
 import pytest
-from django_crypto_trading_bot.trading_bot.models import Account, Market
-from .factories import AccountFactory, UserFactory, MarketFactory
 from ccxt.base.exchange import Exchange
+
+from django_crypto_trading_bot.trading_bot.models import Account, Market
+
+from .factories import AccountFactory, MarketFactory, UserFactory
 
 
 @pytest.mark.django_db()

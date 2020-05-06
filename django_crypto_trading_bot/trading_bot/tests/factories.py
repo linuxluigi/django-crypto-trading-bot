@@ -1,10 +1,10 @@
 from decimal import Decimal
 
-from config.settings.base import env
 from django.utils import timezone
 from factory import DjangoModelFactory, SubFactory
 
-from django_crypto_trading_bot.trading_bot.models import Order
+from config.settings.base import env
+from django_crypto_trading_bot.trading_bot.models import Exchanges, Order
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 
 
@@ -14,6 +14,7 @@ class AccountFactory(DjangoModelFactory):
         django_get_or_create = ["api_key"]
 
     exchange = "binance"
+    # exchange = Exchanges.BINANCE
     user = SubFactory(UserFactory)
     api_key = env("BINANCE_SANDBOX_API_KEY")
     secret = env("BINANCE_SANDBOX_SECRET_KEY")

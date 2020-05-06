@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 
+import pytz
 from ccxt.base.exchange import Exchange
 from django.db import models
+from django.utils import timezone
 
 from django_crypto_trading_bot.users.models import User
 
 from .api.client import get_client
 
+
+class Exchanges(models.TextChoices):
+        BINANCE = 'Binance'
 
 class Account(models.Model):
     """
@@ -16,11 +22,7 @@ class Account(models.Model):
     for an exchange like binance
     """
 
-    # Exchnages
-    EXCHANGE_BINANCE = "Binance"
-    EXCHANGES_CHOICE = [(EXCHANGE_BINANCE, EXCHANGE_BINANCE)]
-
-    exchange = models.CharField(max_length=250, choices=EXCHANGES_CHOICE)
+    exchange = models.CharField(max_length=250, choices=Exchanges.choices)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     api_key = models.CharField(max_length=250)
     secret = models.CharField(max_length=250)
@@ -52,7 +54,7 @@ class Market(models.Model):
     base = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="base")
     quote = models.ForeignKey(Currency, on_delete=models.PROTECT, related_name="quote")
     active = models.BooleanField(default=True)
-    exchange = models.CharField(max_length=250, choices=Account.EXCHANGES_CHOICE)
+    exchange = models.CharField(max_length=250, choices=Exchanges.choices)
     precision_amount = models.IntegerField()
     precision_price = models.IntegerField()
     limits_amount_min = models.DecimalField(max_digits=30, decimal_places=8)
@@ -212,3 +214,38 @@ class Trade(models.Model):
 
     def cost(self):
         return self.amount * self.order.price
+
+class OHLCV(models.Model):
+    """
+    OHLCV candles https://github.com/ccxt/ccxt/wiki/Manual#ohlcv-structure
+    """
+
+    class Timeframes(models.TextChoices):
+        MINUTE = '1m'
+        HOUR = '1h'
+        DAY = '1d'
+        MONTH = '1M'
+        YEAR = '1y'
+
+    exchange = models.CharField(max_length=250, choices=Exchanges.choices)
+    timeframe = models.CharField(max_length=10, choices=Timeframes.choices)
+    timestamp = models.DateTimeField()
+    open_price = models.DecimalField(max_digits=30, decimal_places=8)
+    highest_price = models.DecimalField(max_digits=30, decimal_places=8)
+    lowest_price = models.DecimalField(max_digits=30, decimal_places=8)
+    closing_price = models.DecimalField(max_digits=30, decimal_places=8)
+    volume_price = models.DecimalField(max_digits=30, decimal_places=8)
+
+    @staticmethod
+    def get_OHLCV(candle: dict, timeframe: Timeframes, exchange: Exchanges):
+        timezone.activate(pytz.timezone("UTC"))
+        return OHLCV(
+            exchange=exchange,
+            timeframe=timeframe,
+            timestamp=datetime.fromtimestamp(candle[0]),
+            open_price=Decimal(candle[1]),
+            highest_price=Decimal(candle[2]),
+            lowest_price=Decimal(candle[3]),
+            closing_price=Decimal(candle[4]),
+            volume_price=Decimal(candle[5]),
+        )

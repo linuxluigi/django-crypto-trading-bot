@@ -3,17 +3,19 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Django Crypto Trading Bot Project Documentation
-====================================================================
-
-Table of Contents:
+Welcome to Django Crypto Trading Bot's documentation!
+======================================================================
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
+
+   pycharm/configuration
 
 
-Indices & Tables
-================
+
+Indices and tables
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
