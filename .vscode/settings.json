@@ -5,8 +5,10 @@
   "cSpell.words": [
     "BINANCE",
     "OHLCV",
+    "nargs",
     "pytest",
     "pytz",
-    "reorderd"
+    "reorderd",
+    "tzinfo"
   ]
 }
