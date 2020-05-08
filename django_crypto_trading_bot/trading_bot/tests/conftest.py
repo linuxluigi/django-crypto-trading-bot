@@ -3,29 +3,20 @@ from decimal import Decimal
 import pytest
 from django.conf import settings
 from django.test import RequestFactory
-
 from django_crypto_trading_bot.trading_bot.models import Account, Market
 from django_crypto_trading_bot.trading_bot.simulation.simulation import Simulation
 from django_crypto_trading_bot.trading_bot.tests.factories import (
     AccountFactory,
     BnbCurrencyFactory,
+    BnbEurMarketFactory,
     BuyOrderFactory,
     EurCurrencyFactory,
     MarketFactory,
+    OHLCVBnbEurFactory,
+    OHLCVTrxBnbFactory,
     SellOrderFactory,
     TrxCurrencyFactory,
 )
-from django_crypto_trading_bot.trading_bot.trade_logic import TradeLogic
-
-
-@pytest.fixture
-def trade_logic_sell() -> TradeLogic:
-    return TradeLogic(order=SellOrderFactory())
-
-
-@pytest.fixture
-def trade_logic_buy() -> TradeLogic:
-    return TradeLogic(order=BuyOrderFactory())
 
 
 @pytest.fixture
@@ -35,19 +26,25 @@ def request_factory() -> RequestFactory:
 
 @pytest.fixture
 def simulation() -> Simulation:
+    BnbEurMarketFactory()
     market: Market = MarketFactory()
     return Simulation(markets=[market])
 
 
 @pytest.fixture
 def coin_exchange() -> dict:
+    ohlcv_bnb_eur: OHLCV = OHLCVBnbEurFactory()
+    ohlcv_trx_bnb: OHLCV = OHLCVTrxBnbFactory()
     return {
-        "timestamp": 1588280400000,
+        "timestamp": ohlcv_bnb_eur.timestamp,
         "currency": {
             "EUR": {"price": Decimal(1), "base_currency": EurCurrencyFactory()},
-            "BNB": {"price": Decimal(15.7987), "base_currency": BnbCurrencyFactory()},
+            "BNB": {
+                "price": ohlcv_bnb_eur.closing_price,
+                "base_currency": BnbCurrencyFactory(),
+            },
             "TRX": {
-                "price": Decimal(0.000896) * Decimal(15.7987),
+                "price": ohlcv_trx_bnb.closing_price * ohlcv_bnb_eur.closing_price,
                 "base_currency": TrxCurrencyFactory(),
             },
         },

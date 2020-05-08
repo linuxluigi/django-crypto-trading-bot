@@ -1,11 +1,12 @@
+from datetime import datetime
 from decimal import Decimal
 
-from django.utils import timezone
-from factory import DjangoModelFactory, SubFactory
-
+import pytz
 from config.settings.base import env
-from django_crypto_trading_bot.trading_bot.models import Exchanges, Order
+from django.utils import timezone
+from django_crypto_trading_bot.trading_bot.models import OHLCV, Exchanges, Order
 from django_crypto_trading_bot.users.tests.factories import UserFactory
+from factory import DjangoModelFactory, SubFactory
 
 
 class AccountFactory(DjangoModelFactory):
@@ -65,6 +66,11 @@ class MarketFactory(DjangoModelFactory):
     limits_price_max = Decimal(1000)
 
 
+class BnbEurMarketFactory(MarketFactory):
+    base = SubFactory(BnbCurrencyFactory)
+    quote = SubFactory(EurCurrencyFactory)
+
+
 class OutOfDataMarketFactory(MarketFactory):
     base = SubFactory(BtcCurrencyFactory)
     quote = SubFactory(UsdtCurrencyFactory)
@@ -108,3 +114,25 @@ class BuyOrderFactory(DjangoModelFactory):
 class SellOrderFactory(BuyOrderFactory):
     order_id = "2"
     side = Order.Side.SIDE_SELL
+
+
+class OHLCVBnbEurFactory(DjangoModelFactory):
+    class Meta:
+        model = "trading_bot.OHLCV"
+        django_get_or_create = ["market", "timestamp", "timeframe"]
+
+    market = SubFactory(BnbEurMarketFactory)
+    timeframe = OHLCV.Timeframes.MINUTE_1
+    timestamp = datetime(
+        year=2020, month=4, day=30, hour=23, tzinfo=pytz.timezone("UTC")
+    )
+    open_price = Decimal(0)
+    highest_price = Decimal(0)
+    lowest_price = Decimal(0)
+    closing_price = Decimal(15.7987)
+    volume_price = Decimal(0)
+
+
+class OHLCVTrxBnbFactory(OHLCVBnbEurFactory):
+    market = SubFactory(MarketFactory)
+    closing_price = Decimal(15.7987)

@@ -8,6 +8,7 @@ import pytz
 from ccxt.base.exchange import Exchange
 from django.db import models
 from django.utils import timezone
+
 from django_crypto_trading_bot.users.models import User
 
 from .api.client import get_client
@@ -340,6 +341,7 @@ class OHLCV(models.Model):
         for market in Market.objects.filter(active=True):
             print("Update market {} for timeframe {}.".format(market.symbol, timeframe))
             OHLCV.update_new_candles(timeframe=timeframe, market=market)
+
 
 class Simulation(models.Model):
     """
