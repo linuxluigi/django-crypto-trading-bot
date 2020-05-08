@@ -8,7 +8,6 @@ import pytz
 from ccxt.base.exchange import Exchange
 from django.db import models
 from django.utils import timezone
-
 from django_crypto_trading_bot.users.models import User
 
 from .api.client import get_client
@@ -342,7 +341,6 @@ class OHLCV(models.Model):
             print("Update market {} for timeframe {}.".format(market.symbol, timeframe))
             OHLCV.update_new_candles(timeframe=timeframe, market=market)
 
-
 class Simulation(models.Model):
     """
     Simulation results
@@ -356,7 +354,7 @@ class Simulation(models.Model):
         default=30
     )  # how many days will be analysed for new trading order
     min_profit = models.DecimalField(
-        max_digits=30, decimal_places=2, default=0.1
+        max_digits=30, decimal_places=2, default=Decimal(0.1)
     )  # min profit for each trade in percent
     history_days = models.IntegerField(default=365)  # how many days will be simulated
     start_simulation = models.DateTimeField()  # time begin of the first simulation
@@ -368,6 +366,12 @@ class Simulation(models.Model):
     end_amount_eur_average = models.DecimalField(
         max_digits=30, decimal_places=8
     )  # average end amount of all simulations
-    roi = models.DecimalField(
+    roi_min = models.DecimalField(
+        max_digits=30, decimal_places=8
+    )  # return of investment minimum
+    roi_average = models.DecimalField(
         max_digits=30, decimal_places=8
     )  # return of investment average
+    roi_max = models.DecimalField(
+        max_digits=30, decimal_places=8
+    )  # return of investment maximum
