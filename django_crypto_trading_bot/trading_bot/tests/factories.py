@@ -13,8 +13,7 @@ class AccountFactory(DjangoModelFactory):
         model = "trading_bot.Account"
         django_get_or_create = ["api_key"]
 
-    exchange = "binance"
-    # exchange = Exchanges.BINANCE
+    exchange = Exchanges.BINANCE
     user = SubFactory(UserFactory)
     api_key = env("BINANCE_SANDBOX_API_KEY")
     secret = env("BINANCE_SANDBOX_SECRET_KEY")
@@ -56,7 +55,7 @@ class MarketFactory(DjangoModelFactory):
 
     base = SubFactory(TrxCurrencyFactory)
     quote = SubFactory(BnbCurrencyFactory)
-    exchange = "binance"
+    exchange = Exchanges.BINANCE
     active = True
     precision_amount = 3
     precision_price = 4
@@ -95,9 +94,9 @@ class BuyOrderFactory(DjangoModelFactory):
     bot = SubFactory(BotFactory)
     order_id = "1"
     timestamp = timezone.now()
-    status = Order.CLOSED
-    order_type = Order.LIMIT
-    side = Order.SIDE_BUY
+    status = Order.Status.CLOSED
+    order_type = Order.OrderType.LIMIT
+    side = Order.Side.SIDE_BUY
     price = 1
     amount = 100
     filled = 100
@@ -108,4 +107,4 @@ class BuyOrderFactory(DjangoModelFactory):
 
 class SellOrderFactory(BuyOrderFactory):
     order_id = "2"
-    side = Order.SIDE_SELL
+    side = Order.Side.SIDE_SELL

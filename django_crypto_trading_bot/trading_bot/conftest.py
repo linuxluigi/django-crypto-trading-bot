@@ -16,7 +16,6 @@ from django_crypto_trading_bot.trading_bot.tests.factories import (
     TrxCurrencyFactory,
 )
 from django_crypto_trading_bot.trading_bot.trade_logic import TradeLogic
-from django_crypto_trading_bot.users.tests.factories import UserFactory
 
 
 @pytest.fixture
@@ -36,9 +35,8 @@ def request_factory() -> RequestFactory:
 
 @pytest.fixture
 def simulation() -> Simulation:
-    account: Account = AccountFactory()
     market: Market = MarketFactory()
-    return Simulation(account=account, markets=[market], history_days=365, day_span=30)
+    return Simulation(markets=[market])
 
 
 @pytest.fixture

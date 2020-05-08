@@ -12,7 +12,9 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["django-crypto-trading-bot.org"])
+ALLOWED_HOSTS = env.list(
+    "DJANGO_ALLOWED_HOSTS", default=["django-crypto-trading-bot.org"]
+)
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -87,7 +89,9 @@ AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME", default=None)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # MEDIA
 # ------------------------------------------------------------------------------
-DEFAULT_FILE_STORAGE = "django_crypto_trading_bot.utils.storages.MediaRootS3Boto3Storage"
+DEFAULT_FILE_STORAGE = (
+    "django_crypto_trading_bot.utils.storages.MediaRootS3Boto3Storage"
+)
 MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/media/"
 
 # TEMPLATES
@@ -107,7 +111,8 @@ TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
-    "DJANGO_DEFAULT_FROM_EMAIL", default="Django Crypto Trading Bot <noreply@django-crypto-trading-bot.org>"
+    "DJANGO_DEFAULT_FROM_EMAIL",
+    default="Django Crypto Trading Bot <noreply@django-crypto-trading-bot.org>",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)

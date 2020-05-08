@@ -58,14 +58,15 @@ def create_order_from_api_response(cctx_order: dict, bot: Bot) -> Order:
     :param botId: the id of the bot which has fired the request
     :return: Order object
     """
-    timezone.activate(pytz.timezone("UTC"))
     return Order.objects.create(
         bot=bot,
         status=cctx_order["status"],
         order_id=cctx_order["id"],
         order_type=cctx_order["type"],
         side=cctx_order["side"],
-        timestamp=datetime.fromtimestamp(cctx_order["timestamp"]),
+        timestamp=datetime.fromtimestamp(
+            cctx_order["timestamp"], tz=pytz.timezone("UTC")
+        ),
         price=cctx_order["price"],
         amount=cctx_order["amount"],
         filled=cctx_order["filled"],

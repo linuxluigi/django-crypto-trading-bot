@@ -13,8 +13,8 @@ def get_or_create_market(response: dict, exchange_id: str) -> Market:
     """
     update or create a market based on the api json
     """
-    base, create = Currency.objects.get_or_create(short=response["base"])
-    quote, create = Currency.objects.get_or_create(short=response["quote"])
+    base, create = Currency.objects.get_or_create(short=response["base"].upper())
+    quote, create = Currency.objects.get_or_create(short=response["quote"].upper())
 
     try:
         market: Market = Market.objects.get(
