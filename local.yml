@@ -10,6 +10,7 @@ services:
       context: .
       dockerfile: ./compose/local/django/Dockerfile
     image: django_crypto_trading_bot_local_django
+    container_name: django
     depends_on:
       - postgres
       - mailhog
@@ -18,9 +19,6 @@ services:
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
-    environment:
-      - BINANCE_SANDBOX_API_KEY=${BINANCE_SANDBOX_API_KEY}
-      - BINANCE_SANDBOX_SECRET_KEY=${BINANCE_SANDBOX_SECRET_KEY}
     ports:
       - "8000:8000"
     command: /start
@@ -30,6 +28,7 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: django_crypto_trading_bot_production_postgres
+    container_name: postgres
     volumes:
       - local_postgres_data:/var/lib/postgresql/data
       - local_postgres_data_backups:/backups
@@ -38,5 +37,6 @@ services:
 
   mailhog:
     image: mailhog/mailhog:v1.0.0
+    container_name: mailhog
     ports:
       - "8025:8025"
