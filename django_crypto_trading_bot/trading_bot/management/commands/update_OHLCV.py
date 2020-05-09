@@ -12,7 +12,7 @@ class Command(BaseCommand):
             nargs="?",
             type=OHLCV.Timeframes,
             help="Timeframe like 1m, 1h, 1d, 1w, 1M, ...",
-            default=OHLCV.Timeframes.MONTH_1,
+            default=OHLCV.Timeframes.MINUTE_1,
         )
 
     def handle(self, *args, **options):
