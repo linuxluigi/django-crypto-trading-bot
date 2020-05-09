@@ -3,6 +3,7 @@ from decimal import Decimal
 import pytest
 from django.conf import settings
 from django.test import RequestFactory
+
 from django_crypto_trading_bot.trading_bot.models import Account, Market
 from django_crypto_trading_bot.trading_bot.simulation.simulation import Simulation
 from django_crypto_trading_bot.trading_bot.tests.factories import (

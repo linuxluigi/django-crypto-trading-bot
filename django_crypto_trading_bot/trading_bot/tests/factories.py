@@ -2,11 +2,12 @@ from datetime import datetime
 from decimal import Decimal
 
 import pytz
-from config.settings.base import env
 from django.utils import timezone
+from factory import DjangoModelFactory, SubFactory
+
+from config.settings.base import env
 from django_crypto_trading_bot.trading_bot.models import OHLCV, Exchanges, Order
 from django_crypto_trading_bot.users.tests.factories import UserFactory
-from factory import DjangoModelFactory, SubFactory
 
 
 class AccountFactory(DjangoModelFactory):

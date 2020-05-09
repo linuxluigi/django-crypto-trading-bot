@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import OHLCV, Account, Bot, Currency, Market, Order, Trade
+from .models import OHLCV, Account, Bot, Currency, Market, Order, Simulation, Trade
 
 
 class BotInline(admin.TabularInline):
@@ -186,7 +186,7 @@ class OHLCVAdmin(admin.ModelAdmin):
                     "highest_price",
                     "lowest_price",
                     "closing_price",
-                    "volume_price",
+                    "volume",
                 ]
             },
         ),
@@ -200,7 +200,7 @@ class OHLCVAdmin(admin.ModelAdmin):
         "highest_price",
         "lowest_price",
         "closing_price",
-        "volume_price",
+        "volume",
     )
     list_filter = ["market", "timeframe", "timestamp"]
     search_fields = [
@@ -211,8 +211,48 @@ class OHLCVAdmin(admin.ModelAdmin):
         "highest_price",
         "lowest_price",
         "closing_price",
-        "volume_price",
+        "volume",
     ]
+
+
+class SimulationAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (
+            "Setup",
+            {
+                "fields": [
+                    "market",
+                    "created",
+                    "day_span",
+                    "min_profit",
+                    "history_days",
+                    "start_amount_eur",
+                ]
+            },
+            "Simulation Stats",
+            {"fields": ["start_simulation", "end_simulation", "simulation_amount",]},
+            "Return of Investment",
+            {
+                "fields": [
+                    "end_amount_eur_average",
+                    "roi_min",
+                    "roi_average",
+                    "roi_max",
+                ]
+            },
+        ),
+    ]
+
+    list_display = (
+        "market",
+        "created",
+        "day_span",
+        "min_profit",
+        "history_days",
+        "simulation_amount",
+        "roi_average",
+    )
+    list_filter = ["created", "day_span", "min_profit", "history_days"]
 
 
 admin.site.register(Account, AccountAdmin)
@@ -222,3 +262,4 @@ admin.site.register(Market, MarketAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Trade, TradeAdmin)
 admin.site.register(OHLCV, OHLCVAdmin)
+admin.site.register(Simulation)

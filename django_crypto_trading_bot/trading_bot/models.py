@@ -239,7 +239,7 @@ class OHLCV(models.Model):
     highest_price = models.DecimalField(max_digits=30, decimal_places=8)
     lowest_price = models.DecimalField(max_digits=30, decimal_places=8)
     closing_price = models.DecimalField(max_digits=30, decimal_places=8)
-    volume_price = models.DecimalField(max_digits=30, decimal_places=8)
+    volume = models.DecimalField(max_digits=30, decimal_places=8)
 
     @staticmethod
     def get_OHLCV(candle: List[int], timeframe: Timeframes, market: Market) -> OHLCV:
@@ -261,7 +261,7 @@ class OHLCV(models.Model):
             highest_price=Decimal(candle[2]),
             lowest_price=Decimal(candle[3]),
             closing_price=Decimal(candle[4]),
-            volume_price=Decimal(candle[5]),
+            volume=Decimal(candle[5]),
         )
 
     @staticmethod
@@ -377,3 +377,12 @@ class Simulation(models.Model):
     roi_max = models.DecimalField(
         max_digits=30, decimal_places=8
     )  # return of investment maximum
+
+    def __str__(self):
+        return "{0}: {1}d | {2}% | {3} hd | {4} roi".format(
+            self.market.symbol,
+            self.day_span,
+            self.history_days,
+            self.min_profit,
+            self.roi_average,
+        )

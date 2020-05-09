@@ -17,6 +17,7 @@ from django_crypto_trading_bot.trading_bot.models import (
     Exchanges,
     Market,
 )
+from django_crypto_trading_bot.trading_bot.models import Simulation as SimulationDB
 from django_crypto_trading_bot.trading_bot.simulation.bot import SimulationBot
 
 
@@ -33,7 +34,9 @@ class Simulation:
 
         self.amount_eur: Decimal = amount_eur
         self.day_span: List[int] = day_span
+        self.day_span.sort()
         self.min_profit: List[int] = min_profit
+        self.min_profit.sort()
         self.history_days: int = history_days
         self.timeframe: OHLCV.Timeframes = timeframe
 
@@ -110,3 +113,117 @@ class Simulation:
         eur_price: Decimal = coin_OHLCV.closing_price
 
         return eur_amount / eur_price / bnb_OHLCV.closing_price
+
+    def run_simulation(self):
+        history_amount: int = 1440 * self.history_days
+
+        for market in self.markets:
+            results: dict = {}
+
+            # create simulation bots
+            bots: List[SimulationBot] = list()
+            for day_span in self.day_span:
+                results[day_span] = {}
+                for min_profit in self.min_profit:
+                    results[day_span][min_profit] = list()
+                    bots.append(
+                        SimulationBot(
+                            market=market, day_span=day_span, min_profit=min_profit
+                        )
+                    )
+
+            candles: List[OHLCV] = list(
+                OHLCV.objects.filter(market=market, timeframe=self.timeframe).order_by(
+                    "timestamp"
+                )[100:]
+            )
+
+            # todo only for timeframe 1 minute
+            # 1.440 = 60 minutes * 24 hours
+            max_candles: int = len(candles) - 1440 * self.day_span[-1] + 100
+
+            for candle_start in range(0, max_candles, 1000):
+                bot: SimulationBot
+                for bot in bots:
+                    day_span_amount: int = 1440 * bot.day_span
+                    ticker_history: List[OHLCV] = candles[
+                        candle_start : candle_start + history_amount
+                    ]
+
+                    if len(ticker_history) < history_amount:
+                        continue
+
+                    quote_amount: Decimal = self.eur_2_coin(
+                        currency=bot.market.quote,
+                        eur_amount=self.amount_eur,
+                        request_time=ticker_history[0].timestamp,
+                    )
+
+                    bot.init_order(
+                        quote_amount=quote_amount,
+                        ticker_history=ticker_history[0:day_span_amount],
+                    )
+
+                    for start in range(
+                        0, len(ticker_history) - history_amount - day_span_amount
+                    ):
+                        if (
+                            len(ticker_history[start : day_span_amount + start])
+                            < history_amount
+                        ):
+                            break
+                        bot.update_orders(
+                            ticker_history=ticker_history[
+                                start : day_span_amount + start
+                            ]
+                        )
+
+                    bot.count_amounts()
+
+                    bot_eur_value: Decimal = self.coin_2_eur(
+                        currency=bot.market.quote,
+                        coin_amount=bot.quote_amount,
+                        request_time=ticker_history[-1].timestamp,
+                    )
+                    bot_eur_value += self.coin_2_eur(
+                        currency=bot.market.base,
+                        coin_amount=bot.base_amount,
+                        request_time=ticker_history[-1].timestamp,
+                    )
+
+                    results[bot.day_span][bot.min_profit].append(bot_eur_value)
+
+            for day_span_key in results:
+                for min_profit_key in results:
+                    end_amount_min: Decimal = results[day_span_key][min_profit_key][0]
+                    end_amount_max: Decimal = results[day_span_key][min_profit_key][0]
+                    all_amounts: Decimal = 0
+
+                    for amount in results[day_span_key][min_profit_key]:
+                        all_amounts += amount
+                        if amount < end_amount_min:
+                            end_amount_min = amount
+                        if amount > end_amount_max:
+                            end_amount_max = amount
+
+                    average_amount: Decimal = all_amounts / len(
+                        results[day_span_key][min_profit_key]
+                    )
+
+                    simulation: SimulationDB = SimulationDB.objects.create(
+                        market=market,
+                        day_span=day_span_key,
+                        min_profit=min_profit_key,
+                        history_days=self.history_days,
+                        start_simulation=candles[0].timestamp,
+                        end_simulation=candles[-1].timestamp,
+                        simulation_amount=len(results[day_span_key][min_profit_key]),
+                        start_amount_eur=self.amount_eur,
+                        end_amount_eur_average=average_amount,
+                        roi_min=(end_amount_min - self.amount_eur) / self.amount_eur,
+                        roi_average=(average_amount - self.amount_eur)
+                        / self.amount_eur,
+                        roi_max=(end_amount_max - self.amount_eur) / self.amount_eur,
+                    )
+
+                    print(simulation)

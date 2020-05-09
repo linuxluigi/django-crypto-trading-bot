@@ -1,16 +1,17 @@
-import pytest
-from ccxt.base.exchange import Exchange
-from typing import List
-from django_crypto_trading_bot.trading_bot.models import (
-    Account,
-    Market,
-    OHLCV,
-    Exchanges,
-)
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import List
+
+import pytest
 import pytz
+from ccxt.base.exchange import Exchange
 from django_crypto_trading_bot.trading_bot.api.client import get_client
+from django_crypto_trading_bot.trading_bot.models import (
+    OHLCV,
+    Account,
+    Exchanges,
+    Market,
+)
 
 from .factories import AccountFactory, MarketFactory, UserFactory
 
@@ -67,7 +68,7 @@ def test_get_OHLCV():
     assert ohlcv.highest_price == Decimal(test_candel[2])
     assert ohlcv.lowest_price == Decimal(test_candel[3])
     assert ohlcv.closing_price == Decimal(test_candel[4])
-    assert ohlcv.volume_price == Decimal(test_candel[5])
+    assert ohlcv.volume == Decimal(test_candel[5])
 
 
 @pytest.mark.django_db()
@@ -99,7 +100,7 @@ def test_create_OHLCV():
     assert ohlcv.highest_price == Decimal(test_candel[2])
     assert ohlcv.lowest_price == Decimal(test_candel[3])
     assert ohlcv.closing_price == Decimal(test_candel[4])
-    assert ohlcv.volume_price == Decimal(test_candel[5])
+    assert ohlcv.volume == Decimal(test_candel[5])
 
 
 @pytest.mark.django_db()
