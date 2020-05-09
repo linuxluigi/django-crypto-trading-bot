@@ -6,7 +6,6 @@ from decimal import Decimal
 import pytz
 from ccxt import Exchange
 from django.utils import timezone
-
 from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.models import Bot, Currency, Market, Order
 
@@ -80,7 +79,7 @@ def update_order_from_api_response(cctx_order: dict, order: Order) -> Order:
     """
     Parse API response to update a order object
     """
-    if order.status == Order.REORDERD:
+    if order.status == Order.Status.REORDERD:
         # todo do not change order when already reorderd
         return order
     if order.status != cctx_order["status"]:
@@ -109,5 +108,5 @@ def update_all_open_orders():
     """
     update all open orders
     """
-    for order in Order.objects.filter(status=Order.OPEN):
+    for order in Order.objects.filter(status=Order.Status.OPEN):
         get_order_from_exchange(order=order)

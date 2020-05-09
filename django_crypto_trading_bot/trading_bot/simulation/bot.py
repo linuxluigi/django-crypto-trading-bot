@@ -17,10 +17,10 @@ class SimulationBot:
     """Bot simulation class
     """
 
-    def __init__(self, market: Market, day_span: int, min_profit: int):
+    def __init__(self, market: Market, day_span: int, min_profit: float):
         self.market: Market = market
         self.day_span: int = day_span
-        self.min_profit: int = min_profit
+        self.min_profit: float = min_profit
         self.orders: List[SimulationOrder] = []
         self.trade_counter: int = 0
 
@@ -60,6 +60,9 @@ class SimulationBot:
 
         for order_id in range(0, len(self.orders)):
             order: SimulationOrder = self.orders[order_id]
+            fee: Decimal
+            new_amount: Decimal
+            ticker: OHLCV
 
             if order.done:
                 continue
@@ -68,15 +71,14 @@ class SimulationBot:
                 if order.price <= trade_price:
                     if not high:
                         high = order.price + order.price * (
-                            self.min_profit / Decimal(100)
+                            Decimal(self.min_profit) / Decimal(100)
                         )
-                        ticker: OHLCV
                         for ticker in ticker_history:
                             if high < ticker.highest_price:
                                 high = ticker.highest_price
 
-                    new_amount: Decimal = order.amount / order.price
-                    fee: Decimal = new_amount * Decimal(0.001)
+                    new_amount = order.amount / order.price
+                    fee = new_amount * Decimal(0.001)
                     self.orders.append(
                         SimulationOrder(
                             price=Decimal(high),
@@ -91,15 +93,14 @@ class SimulationBot:
                 if order.price >= trade_price:
                     if not low:
                         low = order.price - order.price * (
-                            self.min_profit / Decimal(100)
+                            Decimal(self.min_profit) / Decimal(100)
                         )
-                        ticker: OHLCV
                         for ticker in ticker_history:
                             if low < ticker.lowest_price:
                                 low = ticker.lowest_price
 
-                    new_amount: Decimal = order.amount * order.price
-                    fee: Decimal = new_amount * Decimal(0.001)
+                    new_amount = order.amount * order.price
+                    fee = new_amount * Decimal(0.001)
                     self.orders.append(
                         SimulationOrder(
                             price=Decimal(low),

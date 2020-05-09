@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-
-from django_crypto_trading_bot.trading_bot.models import Simulation
+from django_crypto_trading_bot.trading_bot.simulation.simulation import Simulation
 
 
 class Command(BaseCommand):

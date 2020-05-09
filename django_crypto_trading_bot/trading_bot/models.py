@@ -8,7 +8,6 @@ import pytz
 from ccxt.base.exchange import Exchange
 from django.db import models
 from django.utils import timezone
-
 from django_crypto_trading_bot.users.models import User
 
 from .api.client import get_client
@@ -36,7 +35,7 @@ class Account(models.Model):
         )
 
     def __str__(self):
-        return "{1}: {1}".format(self.exchange, self.user.get_username())
+        return "{0}: {1}".format(self.exchange, self.user.get_username())
 
 
 class Currency(models.Model):
@@ -187,7 +186,7 @@ class Order(models.Model):
         if self.bot.market.quote == self.fee_currency:
             return self.cost() - self.fee_cost
 
-        return self.cost
+        return self.cost()
 
 
 class Trade(models.Model):
@@ -242,11 +241,11 @@ class OHLCV(models.Model):
     volume = models.DecimalField(max_digits=30, decimal_places=8)
 
     @staticmethod
-    def get_OHLCV(candle: List[int], timeframe: Timeframes, market: Market) -> OHLCV:
+    def get_OHLCV(candle: List[float], timeframe: Timeframes, market: Market) -> OHLCV:
         """Get a OHLCV candle from a OHLCV request
 
         Arguments:
-            candle {List[int]} -- candle list
+            candle {List[float]} -- candle list
             timeframe {Timeframes} -- timeframe from candle
             market {Market} -- market from candle
 
@@ -265,11 +264,13 @@ class OHLCV(models.Model):
         )
 
     @staticmethod
-    def create_OHLCV(candle: List[int], timeframe: Timeframes, market: Market) -> OHLCV:
+    def create_OHLCV(
+        candle: List[float], timeframe: Timeframes, market: Market
+    ) -> OHLCV:
         """Get a saved OHLCV candle from a OHLCV request
 
         Arguments:
-            candle {List[int]} -- candle list
+            candle {List[float]} -- candle list
             timeframe {Timeframes} -- timeframe from candle
             market {Market} -- market from candle
 
@@ -318,7 +319,7 @@ class OHLCV(models.Model):
             last_candle_time = int(last_candle.timestamp.timestamp()) * 1000
 
         while True:
-            candles: List[dict] = exchange.fetch_ohlcv(
+            candles: List[List[float]] = exchange.fetch_ohlcv(
                 symbol=market.symbol, timeframe=timeframe, since=last_candle_time + 1
             )
 
@@ -329,7 +330,7 @@ class OHLCV(models.Model):
             if len(candles) == 0:
                 break
 
-            last_candle_time = candles[-1][0]
+            last_candle_time = int(candles[-1][0])
 
     @staticmethod
     def update_new_candles_all_markets(timeframe: Timeframes):

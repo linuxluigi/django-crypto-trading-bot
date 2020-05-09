@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from decimal import Decimal, getcontext
 from math import pi, sin
+from typing import List
 
 import pytest
 import pytz
@@ -91,7 +92,7 @@ def test_run_simulation():
     # 43.200 = 60 minutes * 24 hours * 30 days
     for x in range(0, 43200):
         # set price for each candle
-        price: Decimal = sin(x)
+        price: Decimal = Decimal(sin(x))
         if price < 0:
             price = price * -1
 
@@ -110,7 +111,7 @@ def test_run_simulation():
         )
 
         # BNB/EUR
-        price = price * pi
+        price = price * Decimal(pi)
         candles.append(
             OHLCV(
                 market=bnb_eur_market,

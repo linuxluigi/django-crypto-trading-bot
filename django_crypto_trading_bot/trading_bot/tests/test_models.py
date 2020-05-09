@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import List
+from typing import List, Optional
 
 import pytest
 import pytz
@@ -44,9 +44,9 @@ def test_symbol():
 def test_get_OHLCV():
 
     market: Market = MarketFactory()
-    timeframe: str = OHLCV.Timeframes.HOUR_1
+    timeframe: OHLCV.Timeframes = OHLCV.Timeframes.HOUR_1
 
-    test_candel: List[int] = [
+    test_candel: List[float] = [
         1504541580000,  # UTC timestamp in milliseconds, integer
         4235.4,  # (O)pen price, float
         4240.6,  # (H)ighest price, float
@@ -75,9 +75,9 @@ def test_get_OHLCV():
 def test_create_OHLCV():
 
     market: Market = MarketFactory()
-    timeframe: str = OHLCV.Timeframes.HOUR_1
+    timeframe: OHLCV.Timeframes = OHLCV.Timeframes.HOUR_1
 
-    test_candel: List[int] = [
+    test_candel: List[float] = [
         1504541580000,  # UTC timestamp in milliseconds, integer
         4235.4,  # (O)pen price, float
         4240.6,  # (H)ighest price, float
@@ -106,14 +106,18 @@ def test_create_OHLCV():
 @pytest.mark.django_db()
 def test_last_candle():
     market: Market = MarketFactory()
-    timeframe: str = OHLCV.Timeframes.MINUTE_1
+    timeframe: OHLCV.Timeframes = OHLCV.Timeframes.MINUTE_1
 
     # test without any candle
     assert OHLCV.last_candle(timeframe=timeframe, market=market) is None
 
     # test with 1 candles
     OHLCV.create_OHLCV(candle=[0, 0, 0, 0, 0, 0], timeframe=timeframe, market=market)
-    assert OHLCV.last_candle(timeframe=timeframe, market=market).timestamp == datetime(
+    last_candle_1: Optional[OHLCV] = OHLCV.last_candle(
+        timeframe=timeframe, market=market
+    )
+    assert last_candle_1 is not None
+    assert last_candle_1.timestamp == datetime(
         year=1970, month=1, day=1, tzinfo=pytz.UTC
     )
 
@@ -121,7 +125,11 @@ def test_last_candle():
     OHLCV.create_OHLCV(
         candle=[1504541580000, 0, 0, 0, 0, 0], timeframe=timeframe, market=market
     )
-    assert OHLCV.last_candle(timeframe=timeframe, market=market).timestamp == datetime(
+    last_candle_2: Optional[OHLCV] = OHLCV.last_candle(
+        timeframe=timeframe, market=market
+    )
+    assert last_candle_2 is not None
+    assert last_candle_2.timestamp == datetime(
         year=2017, month=9, day=4, hour=16, minute=13, tzinfo=pytz.UTC
     )
 

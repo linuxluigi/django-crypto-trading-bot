@@ -27,7 +27,7 @@ class Simulation:
         markets: Optional[List[Market]] = None,
         amount_eur: Decimal = Decimal(5),
         day_span: List[int] = [30],
-        min_profit: List[int] = [1],
+        min_profit: List[float] = [1],
         history_days: int = 365,
         timeframe: OHLCV.Timeframes = OHLCV.Timeframes.MINUTE_1,
     ):
@@ -35,7 +35,7 @@ class Simulation:
         self.amount_eur: Decimal = amount_eur
         self.day_span: List[int] = day_span
         self.day_span.sort()
-        self.min_profit: List[int] = min_profit
+        self.min_profit: List[float] = min_profit
         self.min_profit.sort()
         self.history_days: int = history_days
         self.timeframe: OHLCV.Timeframes = timeframe
@@ -197,7 +197,7 @@ class Simulation:
                 for min_profit_key in results:
                     end_amount_min: Decimal = results[day_span_key][min_profit_key][0]
                     end_amount_max: Decimal = results[day_span_key][min_profit_key][0]
-                    all_amounts: Decimal = 0
+                    all_amounts: Decimal = Decimal(0)
 
                     for amount in results[day_span_key][min_profit_key]:
                         all_amounts += amount
