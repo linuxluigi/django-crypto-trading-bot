@@ -159,7 +159,7 @@ def test_update_new_candles():
     candles_amount: int = OHLCV.objects.filter(
         timeframe=OHLCV.Timeframes.MINUTE_1, market=market
     ).count()
-    assert candles_amount >= 551
+    assert candles_amount >= 550
     assert candles_amount <= 553
 
 

@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from decimal import Decimal
+from time import sleep
 from typing import List, Optional
 
 import pytz
+from ccxt.base.errors import RequestTimeout
 from ccxt.base.exchange import Exchange
 from django.db import models
 from django.utils import timezone
 from django_crypto_trading_bot.users.models import User
 
 from .api.client import get_client
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 
 class Exchanges(models.TextChoices):
@@ -318,19 +324,36 @@ class OHLCV(models.Model):
         if last_candle:
             last_candle_time = int(last_candle.timestamp.timestamp()) * 1000
 
+        ohlcvs: List[OHLCV] = list()
+
         while True:
-            candles: List[List[float]] = exchange.fetch_ohlcv(
-                symbol=market.symbol, timeframe=timeframe, since=last_candle_time + 1
-            )
+            try:
+                candles: List[List[float]] = exchange.fetch_ohlcv(
+                    symbol=market.symbol,
+                    timeframe=timeframe,
+                    since=last_candle_time + 1,
+                )
+            except RequestTimeout as e:
+                logger.warning(
+                    "Connetion error from {} ... wait 120s for next try".format(
+                        market.exchange
+                    )
+                )
+                sleep(120)
+                continue
 
             for candle in candles:
-                OHLCV.create_OHLCV(candle=candle, timeframe=timeframe, market=market)
+                ohlcvs.append(
+                    OHLCV.get_OHLCV(candle=candle, timeframe=timeframe, market=market)
+                )
 
             # no new candles
             if len(candles) == 0:
                 break
 
             last_candle_time = int(candles[-1][0])
+
+        OHLCV.objects.bulk_create(ohlcvs)
 
     @staticmethod
     def update_new_candles_all_markets(timeframe: Timeframes):
@@ -340,7 +363,9 @@ class OHLCV(models.Model):
             timeframe {Timeframes} -- timeframe from candle
         """
         for market in Market.objects.filter(active=True):
-            print("Update market {} for timeframe {}.".format(market.symbol, timeframe))
+            logger.info(
+                "Update market {} for timeframe {}.".format(market.symbol, timeframe)
+            )
             OHLCV.update_new_candles(timeframe=timeframe, market=market)
 
 
@@ -363,10 +388,10 @@ class Simulation(models.Model):
     start_simulation = models.DateTimeField()  # time begin of the first simulation
     end_simulation = models.DateTimeField()  # time end of the last simulation
     simulation_amount = models.IntegerField()  # how many simulation was used
-    start_amount_eur = models.DecimalField(
+    start_amount_quote = models.DecimalField(
         max_digits=30, decimal_places=8
-    )  # start amount in euro for each simulation
-    end_amount_eur_average = models.DecimalField(
+    )  # start quote amount for each simulation
+    end_amount_quote_average = models.DecimalField(
         max_digits=30, decimal_places=8
     )  # average end amount of all simulations
     roi_min = models.DecimalField(
@@ -380,10 +405,10 @@ class Simulation(models.Model):
     )  # return of investment maximum
 
     def __str__(self):
-        return "{0}: {1}d | {2}% | {3} hd | {4} roi".format(
+        return "{0}: {1}d | {2}% | {3} hd | {4:.2f} roi".format(
             self.market.symbol,
             self.day_span,
-            self.history_days,
             self.min_profit,
+            self.history_days,
             self.roi_average,
         )

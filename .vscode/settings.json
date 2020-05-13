@@ -5,7 +5,9 @@
   "cSpell.words": [
     "BINANCE",
     "OHLCV",
+    "USDT",
     "nargs",
+    "ohlcvs",
     "prec",
     "pytest",
     "pytz",

@@ -22,7 +22,6 @@ class SimulationBot:
         self.day_span: int = day_span
         self.min_profit: float = min_profit
         self.orders: List[SimulationOrder] = []
-        self.trade_counter: int = 0
 
         self.base_amount: Decimal = Decimal(0)
         self.quote_amount: Decimal = Decimal(0)
@@ -34,6 +33,11 @@ class SimulationBot:
             quote_amount {Decimal} -- amount of quote currency
             ticker_history {OHLCV} -- ticker history for day span
         """
+
+        # reset old data
+        self.orders.clear()
+        self.base_amount = Decimal(0)
+        self.quote_amount = Decimal(0)
 
         low: Decimal = ticker_history[0].lowest_price
         for ticker in ticker_history:
@@ -111,7 +115,7 @@ class SimulationBot:
 
                     self.orders[order_id].done = True
 
-    def count_amounts(self):
+    def count_amounts(self, last_candle: OHLCV):
         for order in self.orders:
             if order.done:
                 continue
@@ -120,6 +124,8 @@ class SimulationBot:
                 self.quote_amount += order.amount
             else:
                 self.base_amount += order.amount
+
+        return self.quote_amount + (self.base_amount * last_candle.closing_price)
 
     def __str__(self):
         return "{} | day_span {} | min_profit {}".format(
