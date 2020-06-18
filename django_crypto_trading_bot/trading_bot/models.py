@@ -173,11 +173,7 @@ class Order(models.Model):
     filled = models.DecimalField(
         max_digits=30, decimal_places=8, default=0
     )  # filled amount of base currency
-    fee_currency = models.ForeignKey(Currency, on_delete=models.PROTECT, blank=True, null=True)
-    fee_cost = models.DecimalField(max_digits=30, decimal_places=8, default=Decimal(0))
-    fee_rate = models.DecimalField(
-        max_digits=30, decimal_places=8, default=Decimal(0.1)
-    )
+
     # reorder = models.ForeignKey("self", blank=True, null=True, on_delete=models.CASCADE)
 
     def remaining(self) -> Decimal:

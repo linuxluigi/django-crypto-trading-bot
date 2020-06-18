@@ -43,9 +43,6 @@ def create_order(
             price=price,
             amount=amount,
             filled=Decimal(0),
-            fee_currency=bot.market.quote,
-            fee_cost=price * amount * Decimal(0.001),
-            fee_rate=Decimal(0.1),
         )
     else:
         cctx_order: dict = exchange.create_order(
@@ -68,7 +65,7 @@ def create_order_from_api_response(cctx_order: dict, bot: Bot) -> Order:
     else:
         side = Order.Side.SIDE_SELL
 
-    order: Order = Order.objects.create(
+    return Order.objects.create(
         bot=bot,
         status=cctx_order["status"],
         order_id=cctx_order["id"],
@@ -82,15 +79,6 @@ def create_order_from_api_response(cctx_order: dict, bot: Bot) -> Order:
         filled=Decimal(cctx_order["filled"]),
     )
 
-    if cctx_order["fee"]:
-        if cctx_order["fee"]["currency"]:
-            order.fee_currency=Currency(short=cctx_order["fee"]["currency"])
-        if cctx_order["fee"]["cost"]:
-            order.fee_cost=cctx_order["fee"]["cost"]
-        if cctx_order["fee"]["rate"]:
-            order.fee_rate=cctx_order["fee"]["rate"]
-    return order
-
 def update_order_from_api_response(cctx_order: dict, order: Order) -> Order:
     """
     Parse API response to update a order object
@@ -103,8 +91,6 @@ def update_order_from_api_response(cctx_order: dict, order: Order) -> Order:
         pass
     order.status = cctx_order["status"]
     order.filled = cctx_order["filled"]
-    order.fee_cost = cctx_order["fee"]["cost"]
-    order.fee_rate = cctx_order["fee"]["rate"]
     order.save()
     return order
 
