@@ -6,7 +6,7 @@ from django.utils import timezone
 from factory import DjangoModelFactory, SubFactory
 
 from config.settings.base import env
-from django_crypto_trading_bot.trading_bot.models import OHLCV, Exchanges, Order
+from django_crypto_trading_bot.trading_bot.models import OHLCV, Exchanges, Order, Trade
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 
 
@@ -115,6 +115,21 @@ class BuyOrderFactory(DjangoModelFactory):
 class SellOrderFactory(BuyOrderFactory):
     order_id = "2"
     side = Order.Side.SIDE_SELL
+
+
+class TradeFactory(DjangoModelFactory):
+    class Meta:
+        model = "trading_bot.Trade"
+        django_get_or_create = ["trade_id"]
+
+    order = SubFactory(BuyOrderFactory)
+    trade_id = "123"
+    timestamp = timezone.now()
+    taker_or_maker = Order.OrderType.MARKET
+    amount = Decimal(10)
+    fee_currency = SubFactory(EurCurrencyFactory)
+    fee_cost = Decimal(000.1)
+    fee_rate = Decimal(00.1)
 
 
 class OHLCVBnbEurFactory(DjangoModelFactory):

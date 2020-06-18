@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from decimal import Decimal
+from decimal import ROUND_DOWN, Decimal, getcontext
+from functools import partial
+from multiprocessing.pool import ThreadPool
 from time import sleep
 from typing import List, Optional
 
@@ -11,6 +13,7 @@ from ccxt.base.errors import RequestTimeout
 from ccxt.base.exchange import Exchange
 from django.db import models
 from django.utils import timezone
+
 from django_crypto_trading_bot.users.models import User
 
 from .api.client import get_client
@@ -87,6 +90,26 @@ class Market(models.Model):
     @property
     def quoteId(self):
         return self.quote.short.lower()
+
+    def get_min_max_price(self, price: Decimal) -> Decimal:
+        """
+        set the buy & sell min & max prices
+        """
+        if price < self.limits_price_min:
+            price = self.limits_price_min
+        if price > self.limits_price_max:
+            price = self.limits_price_max
+        return price
+
+    def get_min_max_order_amount(self, amount: Decimal) -> Decimal:
+        """
+        set the buy & sell min & max amount
+        """
+        if amount < self.limits_amount_min:
+            amount = Decimal(0)
+        if amount > self.limits_amount_max:
+            amount = self.limits_amount_max
+        return amount
 
     def __str__(self) -> str:
         return self.symbol
@@ -200,7 +223,10 @@ class Trade(models.Model):
     Trade based on https://github.com/ccxt/ccxt/wiki/Manual#trade-structure
     """
 
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, related_name="order", on_delete=models.CASCADE)
+    re_order = models.ForeignKey(
+        Order, related_name="re_order", on_delete=models.CASCADE, blank=True, null=True
+    )
     trade_id = models.CharField(max_length=255, unique=True)
     timestamp = models.DateTimeField()
     taker_or_maker = models.CharField(max_length=8, choices=Order.OrderType.choices)
@@ -213,6 +239,34 @@ class Trade(models.Model):
 
     def cost(self):
         return self.amount * self.order.price
+
+    def get_retrade_amount(self) -> Decimal:
+        """
+        get retrade amount
+
+        Returns:
+            Decimal -- retrade amount
+        """
+        getcontext().prec = self.order.bot.market.precision_amount
+        getcontext().rounding = ROUND_DOWN
+        amount: Decimal = self.amount - self.fee_cost
+        amount -= amount % self.order.bot.market.limits_amount_min
+        return self.order.bot.market.get_min_max_order_amount(amount=amount)
+
+    def get_retrade_price(self, price: Decimal) -> Decimal:
+        """
+        get retrade amount
+
+        Arguments:
+            price {Decimal} -- price
+
+        Returns:
+            Decimal -- retrade amount
+        """
+        getcontext().prec = self.order.bot.market.precision_price
+        price -= price % self.order.bot.market.limits_price_min
+
+        return self.order.bot.market.get_min_max_price(price=price)
 
 
 class OHLCV(models.Model):
@@ -307,12 +361,12 @@ class OHLCV(models.Model):
         )
 
     @staticmethod
-    def update_new_candles(timeframe: Timeframes, market: Market):
+    def update_new_candles(market: Market, timeframe: Timeframes):
         """Update all candles for a single market of a timeframe
 
         Arguments:
-            timeframe {Timeframes} -- timeframe from candle
             market {Market} -- market from candle
+            timeframe {Timeframes} -- timeframe from candle
         """
         exchange: Exchange = get_client(exchange_id=market.exchange)
 
@@ -347,6 +401,10 @@ class OHLCV(models.Model):
                     OHLCV.get_OHLCV(candle=candle, timeframe=timeframe, market=market)
                 )
 
+            if len(ohlcvs) >= 10000:
+                OHLCV.objects.bulk_create(ohlcvs)
+                ohlcvs.clear()
+
             # no new candles
             if len(candles) == 0:
                 break
@@ -354,6 +412,11 @@ class OHLCV(models.Model):
             last_candle_time = int(candles[-1][0])
 
         OHLCV.objects.bulk_create(ohlcvs)
+        ohlcvs.clear()
+
+        logger.info(
+            "Update market {} for timeframe {}.".format(market.symbol, timeframe)
+        )
 
     @staticmethod
     def update_new_candles_all_markets(timeframe: Timeframes):
@@ -362,11 +425,19 @@ class OHLCV(models.Model):
         Arguments:
             timeframe {Timeframes} -- timeframe from candle
         """
+
+        markets: List[Market] = list()
         for market in Market.objects.filter(active=True):
-            logger.info(
-                "Update market {} for timeframe {}.".format(market.symbol, timeframe)
-            )
-            OHLCV.update_new_candles(timeframe=timeframe, market=market)
+            markets.append(market)
+
+        # Make the Pool of workers
+        pool = ThreadPool(8)
+
+        pool.map(partial(OHLCV.update_new_candles, timeframe=timeframe), markets)
+
+        # Close the pool and wait for the work to finish
+        pool.close()
+        pool.join()
 
 
 class Simulation(models.Model):

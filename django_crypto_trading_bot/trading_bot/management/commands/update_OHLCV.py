@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
+
 from django_crypto_trading_bot.trading_bot.models import OHLCV
 
 
@@ -12,7 +13,7 @@ class Command(BaseCommand):
             nargs="?",
             type=OHLCV.Timeframes,
             help="Timeframe like 1m, 1h, 1d, 1w, 1M, ...",
-            default=OHLCV.Timeframes.MINUTE_1,
+            default=OHLCV.Timeframes.DAY_1,
         )
 
     def handle(self, *args, **options):

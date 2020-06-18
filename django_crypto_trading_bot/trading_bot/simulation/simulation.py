@@ -1,9 +1,13 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
+from functools import partial
+from multiprocessing.pool import ThreadPool
 from typing import Dict, List, Optional
 
 from ccxt.base.exchange import Exchange
+from django.utils import timezone
+
 from django_crypto_trading_bot.trading_bot.api.market import (
     get_all_markets_from_exchange,
 )
@@ -21,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class Simulation:
+    QUOTE_AMOUNT: Decimal = Decimal(100)
+
     def __init__(
         self,
         markets: Optional[List[Market]] = None,
@@ -28,7 +34,8 @@ class Simulation:
         day_span: List[int] = [30],
         min_profit: List[float] = [1],
         history_days: int = 365,
-        timeframe: OHLCV.Timeframes = OHLCV.Timeframes.MINUTE_1,
+        timeframe: OHLCV.Timeframes = OHLCV.Timeframes.DAY_1,
+        threads: int = 1,
     ):
 
         self.quote_amount: Decimal = quote_amount
@@ -38,162 +45,101 @@ class Simulation:
         self.min_profit.sort()
         self.history_days: int = history_days
         self.timeframe: OHLCV.Timeframes = timeframe
+        self.threads: int = threads
 
         if markets:
             self.markets = markets
         else:
             self.markets = list(Market.objects.filter(active=True))
 
-    # def coin_2_eur(
-    #     self, currency: Currency, coin_amount: Decimal, request_time: datetime,
-    # ) -> Decimal:
+    @staticmethod
+    def simulate_bot(
+        bot: SimulationBot, candles: List[OHLCV], history_days: int
+    ) -> SimulationBot:
+        logger.info("Simulate {} bot".format(bot))
 
-    #     # if coin is EUR
-    #     if currency == self.eur_currency:
-    #         return coin_amount
+        return_of_investments: List[Decimal] = list()
 
-    #     bnb_OHLCV: OHLCV = OHLCV.objects.get(
-    #         market=self.bnb_eur_market, timeframe=self.timeframe, timestamp=request_time
-    #     )
+        # create candles chunk for history_days (skip first 10 days)
+        for candle_start in range(10, len(candles) - history_days):
+            # return_of_investments.append(bot.get_roi(last_candle=candle_chunk[-1]))
+            return_of_investments.append(
+                bot.simulate_bot(
+                    quote_amount=Simulation.QUOTE_AMOUNT,
+                    ticker_history=candles[candle_start : candle_start + history_days],
+                )
+            )
 
-    #     # if coin is BNB
-    #     if currency == self.bnb_currency:
-    #         return coin_amount * bnb_OHLCV.closing_price
+        # sort roi list
+        return_of_investments.sort()
 
-    #     market: Market = Market.objects.get(
-    #         base=currency, quote=self.bnb_currency, exchange=Exchanges.BINANCE
-    #     )
-    #     coin_OHLCV: OHLCV = OHLCV.objects.get(
-    #         market=market, timeframe=self.timeframe, timestamp=request_time
-    #     )
-    #     eur_price: Decimal = coin_OHLCV.closing_price
+        # sum of all return_of_investments
+        sum_return_of_investments: Decimal = Decimal(0)
+        for roi in return_of_investments:
+            sum_return_of_investments += roi
 
-    #     return coin_amount * coin_OHLCV.closing_price * bnb_OHLCV.closing_price
+        # average roi for all simulations
+        return_of_investment_average: Decimal = sum_return_of_investments / len(
+            return_of_investments
+        )
 
-    # def eur_2_coin(
-    #     self, currency: Currency, eur_amount: Decimal, request_time: datetime,
-    # ) -> Decimal:
-    #     # if coin is EUR
-    #     if currency == self.eur_currency:
-    #         return eur_amount
+        # average end quote amount
+        end_quote_amount: Decimal = sum_return_of_investments * return_of_investment_average / 100
 
-    #     bnb_OHLCV: OHLCV = OHLCV.objects.get(
-    #         market=self.bnb_eur_market, timeframe=self.timeframe, timestamp=request_time
-    #     )
+        # save simulation result
+        simulation: SimulationDB = SimulationDB.objects.create(
+            market=bot.market,
+            day_span=bot.day_span,
+            min_profit=bot.min_profit,
+            history_days=history_days,
+            start_simulation=candles[0].timestamp,
+            end_simulation=candles[-1].timestamp,
+            simulation_amount=len(return_of_investments),
+            start_amount_quote=Simulation.QUOTE_AMOUNT,
+            end_amount_quote_average=end_quote_amount,
+            roi_min=return_of_investments[0],
+            roi_average=return_of_investment_average,
+            roi_max=return_of_investments[-1],
+        )
 
-    #     # if coin is BNB
-    #     if currency == self.bnb_currency:
-    #         return eur_amount / bnb_OHLCV.closing_price
+        logger.info(simulation)
 
-    #     market: Market = Market.objects.get(
-    #         base=currency, quote=self.bnb_currency, exchange=Exchanges.BINANCE
-    #     )
-    #     coin_OHLCV: OHLCV = OHLCV.objects.get(
-    #         market=market, timeframe=self.timeframe, timestamp=request_time
-    #     )
-    #     eur_price: Decimal = coin_OHLCV.closing_price
-
-    #     return eur_amount / eur_price / bnb_OHLCV.closing_price
+        return bot
 
     def run_simulation(self):
-        history_amount: int = 1440 * self.history_days
-
         for market in self.markets:
             logger.info("Simulate {} market".format(market))
-            results: dict = {}
 
             # create simulation bots
             bots: List[SimulationBot] = list()
-            for day_span in self.day_span:
-                results[day_span] = {}
-                for min_profit in self.min_profit:
-                    results[day_span][min_profit] = list()
-                    bots.append(
-                        SimulationBot(
-                            market=market, day_span=day_span, min_profit=min_profit
-                        )
-                    )
+            for min_profit in self.min_profit:
+                bots.append(
+                    SimulationBot(market=market, day_span=0, min_profit=min_profit)
+                )
 
-            # get all candles of the market except the first 100
+            # get all candles of the market for the last 4 years except the first 100
+            time_threshold = timezone.now() - timedelta(days=365 * 4)
             candles: List[OHLCV] = list(
-                OHLCV.objects.filter(market=market, timeframe=self.timeframe).order_by(
-                    "timestamp"
-                )[100:]
+                OHLCV.objects.filter(
+                    market=market,
+                    timeframe=self.timeframe,
+                    timestamp__gte=time_threshold,
+                ).order_by("timestamp")[100:]
             )
 
+            # Make the Pool of workers
+            pool = ThreadPool(self.threads)
+
             # run simulation for each bot
-            bot: SimulationBot
-            for bot in bots:
-                logger.info("Simulate {} bot".format(bot))
+            bots = pool.map(
+                partial(
+                    Simulation.simulate_bot,
+                    candles=candles,
+                    history_days=self.history_days,
+                ),
+                bots,
+            )
 
-                # the candle amount for the current bot
-                # 1.440 = 60 minutes * 24 hours
-                iteration_amount: int = 1440 * (bot.day_span + self.history_days)
-
-                # candle amount for day_span
-                day_span_amount: int = 1440 * bot.day_span
-
-                # create candles chunk for history_days + day_span where
-                # todo
-                for candle_start in range(0, len(candles) - iteration_amount, 5000):
-                    # candle chuck for current bot
-                    candle_chunk: List[OHLCV] = candles[
-                        candle_start : candle_start + iteration_amount
-                    ]
-
-                    # init bot
-                    bot.init_order(
-                        quote_amount=self.quote_amount,
-                        ticker_history=candle_chunk[0:day_span_amount],
-                    )
-
-                    # iterate through every candle for current bot
-                    for start in range(0, len(candle_chunk) - day_span_amount):
-                        bot.update_orders(
-                            ticker_history=candle_chunk[start : day_span_amount + start]
-                        )
-
-                    # count assets
-                    results[bot.day_span][bot.min_profit].append(
-                        bot.count_amounts(last_candle=candle_chunk[-1])
-                    )
-
-            # evaluate results
-            for day_span_key, day_span_value in results.items():
-                for min_profit_key, value in day_span_value.items():
-
-                    if not len(value):
-                        continue
-
-                    end_amount_min: Decimal = value[0]
-                    end_amount_max: Decimal = value[0]
-                    all_amounts: Decimal = Decimal(0)
-
-                    for amount in value:
-                        all_amounts += amount
-                        if amount < end_amount_min:
-                            end_amount_min = amount
-                        if amount > end_amount_max:
-                            end_amount_max = amount
-
-                    average_amount: Decimal = all_amounts / len(value)
-
-                    simulation: SimulationDB = SimulationDB.objects.create(
-                        market=market,
-                        day_span=day_span_key,
-                        min_profit=min_profit_key,
-                        history_days=self.history_days,
-                        start_simulation=candles[0].timestamp,
-                        end_simulation=candles[-1].timestamp,
-                        simulation_amount=len(value),
-                        start_amount_quote=self.quote_amount,
-                        end_amount_quote_average=average_amount,
-                        roi_min=(end_amount_min - self.quote_amount)
-                        / self.quote_amount,
-                        roi_average=(average_amount - self.quote_amount)
-                        / self.quote_amount,
-                        roi_max=(end_amount_max - self.quote_amount)
-                        / self.quote_amount,
-                    )
-
-                    logger.info(simulation)
+            # Close the pool and wait for the work to finish
+            pool.close()
+            pool.join()

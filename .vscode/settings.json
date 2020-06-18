@@ -1,5 +1,5 @@
 {
-  "python.pythonPath": "/usr/bin/python3.8",
+  "python.pythonPath": "venv/bin/python",
   "python.linting.pylintEnabled": true,
   "python.formatting.provider": "black",
   "cSpell.words": [
@@ -12,6 +12,13 @@
     "pytest",
     "pytz",
     "reorderd",
+    "retrade",
     "tzinfo"
-  ]
+  ],
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/venv/*/**": true
+  }
 }

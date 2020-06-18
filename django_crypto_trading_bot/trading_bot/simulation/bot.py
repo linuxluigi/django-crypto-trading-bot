@@ -1,8 +1,11 @@
+import logging
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
 from django_crypto_trading_bot.trading_bot.models import OHLCV, Market, Order
+
+logger = logging.getLogger(__name__)
 
 
 class SimulationOrder:
@@ -10,7 +13,12 @@ class SimulationOrder:
         self.price: Decimal = price
         self.amount: Decimal = amount
         self.side: Order.Side = side
-        self.done: bool = False
+        self.tick_counter: int = 0
+
+    def __str__(self):
+        return "{} price | {} amount | {} side | {} tick_counter".format(
+            self.price, self.amount, self.side, self.tick_counter
+        )
 
 
 class SimulationBot:
@@ -21,111 +29,76 @@ class SimulationBot:
         self.market: Market = market
         self.day_span: int = day_span
         self.min_profit: float = min_profit
-        self.orders: List[SimulationOrder] = []
 
-        self.base_amount: Decimal = Decimal(0)
-        self.quote_amount: Decimal = Decimal(0)
+    def simulate_bot(
+        self, quote_amount: Decimal, ticker_history: List[OHLCV]
+    ) -> Decimal:
+        """run bot simulation & return the return of investment
 
-    def init_order(self, quote_amount: Decimal, ticker_history: List[OHLCV]):
-        """init order
-
-        Arguments:
+        Args:
             quote_amount {Decimal} -- amount of quote currency
-            ticker_history {OHLCV} -- ticker history for day span
+            ticker_history (List[OHLCV]): [description]
+
+        Returns:
+            Decimal: return of investment
         """
 
-        # reset old data
-        self.orders.clear()
-        self.base_amount = Decimal(0)
-        self.quote_amount = Decimal(0)
+        order_counter: int = 0
 
-        low: Decimal = ticker_history[0].lowest_price
-        for ticker in ticker_history:
-            if ticker.lowest_price < low:
-                low = ticker.lowest_price
-
-        self.orders.append(
-            SimulationOrder(
-                price=Decimal(low), amount=quote_amount, side=Order.Side.SIDE_BUY,
-            )
+        order: SimulationOrder = SimulationOrder(
+            price=ticker_history[0].lowest_price,
+            amount=quote_amount,
+            side=Order.Side.SIDE_BUY,
         )
 
-    def update_orders(self, ticker_history: List[OHLCV]):
-        last_ticker: OHLCV = ticker_history[-1]
-        trade_price: Decimal = (
-            last_ticker.open_price
-            + last_ticker.highest_price
-            + last_ticker.lowest_price
-            + last_ticker.closing_price
-        ) / 4
-
-        low: Optional[Decimal] = None
-        high: Optional[Decimal] = None
-
-        for order_id in range(0, len(self.orders)):
-            order: SimulationOrder = self.orders[order_id]
-            fee: Decimal
-            new_amount: Decimal
-            ticker: OHLCV
-
-            if order.done:
-                continue
+        for last_ticker in ticker_history:
+            order.tick_counter += 1
 
             if order.side == Order.Side.SIDE_BUY:
-                if order.price <= trade_price:
-                    if not high:
-                        high = order.price + order.price * (
-                            Decimal(self.min_profit) / Decimal(100)
-                        )
-                        for ticker in ticker_history:
-                            if high < ticker.highest_price:
-                                high = ticker.highest_price
+                if order.price <= last_ticker.lowest_price:
+                    high: Decimal = order.price + order.price * (
+                        Decimal(self.min_profit) / Decimal(100)
+                    )
+
+                    if high < self.market.limits_price_max:
+                        high = self.market.limits_price_max
 
                     new_amount = order.amount / order.price
                     fee = new_amount * Decimal(0.001)
-                    self.orders.append(
-                        SimulationOrder(
-                            price=Decimal(high),
-                            amount=new_amount - fee,
-                            side=Order.Side.SIDE_SELL,
-                        )
-                    )
 
-                    self.orders[order_id].done = True
+                    order.price = Decimal(high)
+                    order.amount = new_amount - fee
+                    order.side = Order.Side.SIDE_SELL
+                    order.tick_counter = 0
 
             else:
-                if order.price >= trade_price:
-                    if not low:
-                        low = order.price - order.price * (
-                            Decimal(self.min_profit) / Decimal(100)
-                        )
-                        for ticker in ticker_history:
-                            if low < ticker.lowest_price:
-                                low = ticker.lowest_price
+                if order.price >= last_ticker.highest_price:
+                    low: Decimal = order.price - order.price * (
+                        Decimal(self.min_profit) / Decimal(100)
+                    )
+
+                    if low < self.market.limits_price_min:
+                        low = self.market.limits_price_min
 
                     new_amount = order.amount * order.price
                     fee = new_amount * Decimal(0.001)
-                    self.orders.append(
-                        SimulationOrder(
-                            price=Decimal(low),
-                            amount=new_amount - fee,
-                            side=Order.Side.SIDE_BUY,
-                        )
-                    )
 
-                    self.orders[order_id].done = True
+                    order.price = Decimal(low)
+                    order.amount = new_amount - fee
+                    order.side = Order.Side.SIDE_BUY
+                    order.tick_counter = 0
 
-    def count_amounts(self, last_candle: OHLCV):
-        for order in self.orders:
-            if order.done:
-                continue
+        logger.info(order)
 
-            if order.side == Order.Side.SIDE_BUY:
-                self.quote_amount += order.amount
-            else:
-                self.base_amount += order.amount
+        total_quote_amount: Decimal
+        if order.side == Order.Side.SIDE_BUY:
+            total_quote_amount = order.amount
+        else:
+            total_quote_amount = order.amount * ticker_history[-1].closing_price
 
-        return self.quote_amount + (self.base_amount * last_candle.closing_price)
+        # return of investment
+        win: Decimal = total_quote_amount - quote_amount
+        return (win / total_quote_amount * 100) - 100
 
     def __str__(self):
         return "{} | day_span {} | min_profit {}".format(

@@ -6,12 +6,17 @@ from decimal import Decimal
 import pytz
 from ccxt import Exchange
 from django.utils import timezone
+
 from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.models import Bot, Currency, Market, Order
 
 
 def create_order(
-    amount: Decimal, price: Decimal, side: str, bot: Bot, isTestOrder: bool = False
+    amount: Decimal,
+    price: Decimal,
+    side: Order.Side,
+    bot: Bot,
+    isTestOrder: bool = False,
 ) -> Order:
     """
     Create an order

@@ -5,6 +5,7 @@ from typing import List
 
 import pytest
 import pytz
+
 from django_crypto_trading_bot.trading_bot.models import OHLCV, Account, Market
 from django_crypto_trading_bot.trading_bot.models import Simulation as SimulationDB
 from django_crypto_trading_bot.trading_bot.simulation.simulation import Simulation
@@ -51,68 +52,68 @@ def test_init():
 #         ) == pytest.approx(Decimal(10) / value["price"])
 
 
-@pytest.mark.django_db()
-def test_run_simulation():
-    # set all decimal numbers a precision of 8
-    getcontext().prec = 8
+# @pytest.mark.django_db()
+# def test_run_simulation():
+#     # set all decimal numbers a precision of 8
+#     getcontext().prec = 8
 
-    BnbEurMarketFactory()
-    trx_bnb_market: Market = MarketFactory()
-    bnb_eur_market: Market = BnbEurMarketFactory()
+#     BnbEurMarketFactory()
+#     trx_bnb_market: Market = MarketFactory()
+#     bnb_eur_market: Market = BnbEurMarketFactory()
 
-    # create demo candel for 395 days
-    candles: List[OHLCV] = list()
-    timestamp: datetime = datetime(
-        year=2019, month=1, day=1, tzinfo=pytz.timezone("UTC")
-    )
-    minute: timedelta = timedelta(minutes=1)
+#     # create demo candel for 395 days
+#     candles: List[OHLCV] = list()
+#     timestamp: datetime = datetime(
+#         year=2019, month=1, day=1, tzinfo=pytz.timezone("UTC")
+#     )
+#     minute: timedelta = timedelta(minutes=1)
 
-    # 43.200 = 60 minutes * 24 hours * 30 days
-    for x in range(0, 43200):
-        # set price for each candle
-        price: Decimal = Decimal(sin(x))
-        if price < 0:
-            price = price * -1
+#     # 43.200 = 60 minutes * 24 hours * 30 days
+#     for x in range(0, 43200):
+#         # set price for each candle
+#         price: Decimal = Decimal(sin(x))
+#         if price < 0:
+#             price = price * -1
 
-        # TRX/BNB
-        candles.append(
-            OHLCV(
-                market=trx_bnb_market,
-                timeframe=OHLCV.Timeframes.MINUTE_1,
-                timestamp=timestamp,
-                open_price=price,
-                highest_price=price,
-                lowest_price=price,
-                closing_price=price,
-                volume=price,
-            )
-        )
+#         # TRX/BNB
+#         candles.append(
+#             OHLCV(
+#                 market=trx_bnb_market,
+#                 timeframe=OHLCV.Timeframes.MINUTE_1,
+#                 timestamp=timestamp,
+#                 open_price=price,
+#                 highest_price=price,
+#                 lowest_price=price,
+#                 closing_price=price,
+#                 volume=price,
+#             )
+#         )
 
-        # BNB/EUR
-        price = price * Decimal(pi)
-        candles.append(
-            OHLCV(
-                market=bnb_eur_market,
-                timeframe=OHLCV.Timeframes.MINUTE_1,
-                timestamp=timestamp,
-                open_price=price,
-                highest_price=price,
-                lowest_price=price,
-                closing_price=price,
-                volume=price,
-            )
-        )
+#         # BNB/EUR
+#         price = price * Decimal(pi)
+#         candles.append(
+#             OHLCV(
+#                 market=bnb_eur_market,
+#                 timeframe=OHLCV.Timeframes.MINUTE_1,
+#                 timestamp=timestamp,
+#                 open_price=price,
+#                 highest_price=price,
+#                 lowest_price=price,
+#                 closing_price=price,
+#                 volume=price,
+#             )
+#         )
 
-        timestamp = timestamp + minute
+#         timestamp = timestamp + minute
 
-    OHLCV.objects.bulk_create(candles)
+#     OHLCV.objects.bulk_create(candles)
 
-    simulation: Simulation = Simulation(
-        markets=[trx_bnb_market],
-        day_span=[1, 2, 3],
-        min_profit=[1, 2, 3],
-        history_days=5,
-    )
-    simulation.run_simulation()
+#     simulation: Simulation = Simulation(
+#         markets=[trx_bnb_market],
+#         day_span=[1, 2, 3],
+#         min_profit=[1, 2, 3],
+#         history_days=5,
+#     )
+#     simulation.run_simulation()
 
-    assert SimulationDB.objects.all().count() == 9
+#     assert SimulationDB.objects.all().count() == 9

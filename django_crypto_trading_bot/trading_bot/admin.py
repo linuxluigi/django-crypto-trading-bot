@@ -130,7 +130,7 @@ class OrderAdmin(admin.ModelAdmin):
         "fee_rate",
     ]
 
-    inlines = [TradeInline]
+    # inlines = [TradeInline]
 
 
 class TradeAdmin(admin.ModelAdmin):
@@ -216,32 +216,32 @@ class OHLCVAdmin(admin.ModelAdmin):
 
 
 class SimulationAdmin(admin.ModelAdmin):
-    fieldsets = [
-        (
-            "Setup",
-            {
-                "fields": [
-                    "market",
-                    "created",
-                    "day_span",
-                    "min_profit",
-                    "history_days",
-                    "start_amount_eur",
-                ]
-            },
-            "Simulation Stats",
-            {"fields": ["start_simulation", "end_simulation", "simulation_amount",]},
-            "Return of Investment",
-            {
-                "fields": [
-                    "end_amount_eur_average",
-                    "roi_min",
-                    "roi_average",
-                    "roi_max",
-                ]
-            },
-        ),
-    ]
+    # fieldsets = [
+    #     (
+    #         "Setup",
+    #         {
+    #             "fields": [
+    #                 "market",
+    #                 "created",
+    #                 "day_span",
+    #                 "min_profit",
+    #                 "history_days",
+    #                 "start_amount_eur",
+    #             ]
+    #         },
+    #         "Simulation Stats",
+    #         {"fields": ["start_simulation", "end_simulation", "simulation_amount",]},
+    #         "Return of Investment",
+    #         {
+    #             "fields": [
+    #                 "end_amount_eur_average",
+    #                 "roi_min",
+    #                 "roi_average",
+    #                 "roi_max",
+    #             ]
+    #         },
+    #     ),
+    # ]
 
     list_display = (
         "market",
@@ -252,7 +252,7 @@ class SimulationAdmin(admin.ModelAdmin):
         "simulation_amount",
         "roi_average",
     )
-    list_filter = ["created", "day_span", "min_profit", "history_days"]
+    list_filter = ["created", "day_span", "min_profit", "history_days", "market"]
 
 
 admin.site.register(Account, AccountAdmin)
@@ -262,4 +262,4 @@ admin.site.register(Market, MarketAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Trade, TradeAdmin)
 admin.site.register(OHLCV, OHLCVAdmin)
-admin.site.register(Simulation)
+admin.site.register(Simulation, SimulationAdmin)

@@ -5,6 +5,7 @@ from typing import List, Optional
 import pytest
 import pytz
 from ccxt.base.exchange import Exchange
+
 from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.models import (
     OHLCV,
@@ -13,7 +14,7 @@ from django_crypto_trading_bot.trading_bot.models import (
     Market,
 )
 
-from .factories import AccountFactory, MarketFactory, UserFactory
+from .factories import AccountFactory, MarketFactory, TradeFactory, UserFactory
 
 
 @pytest.mark.django_db()
@@ -163,13 +164,13 @@ def test_update_new_candles():
     assert candles_amount <= 553
 
 
-@pytest.mark.django_db()
-def test_update_new_candles_all_markets():
-    market: Market = MarketFactory()
+# @pytest.mark.django_db()
+# def test_update_new_candles_all_markets():
+#     market: Market = MarketFactory()
 
-    # update market with timeframe of 1 month
-    OHLCV.update_new_candles_all_markets(timeframe=OHLCV.Timeframes.MONTH_1)
-    assert (
-        OHLCV.objects.filter(timeframe=OHLCV.Timeframes.MONTH_1, market=market).count()
-        > 20
-    )
+#     # update market with timeframe of 1 month
+#     OHLCV.update_new_candles_all_markets(timeframe=OHLCV.Timeframes.MONTH_1)
+#     assert (
+#         OHLCV.objects.filter(timeframe=OHLCV.Timeframes.MONTH_1, market=market).count()
+#         > 20
+#     )
