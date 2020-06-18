@@ -1,3 +1,6 @@
+from decimal import Decimal
+from typing import List
+
 from django.core.management.base import BaseCommand, CommandError
 
 from django_crypto_trading_bot.trading_bot.api.order import create_order
@@ -42,7 +45,7 @@ class Command(BaseCommand):
         )
 
         order: Order = create_order(
-            amount=options["amount"],
+            amount=Decimal(options["amount"]),
             price=candle.lowest_price,
             side=Order.Side.SIDE_BUY,
             bot=bot,
