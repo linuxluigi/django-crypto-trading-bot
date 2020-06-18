@@ -69,7 +69,7 @@ def create_order_from_api_response(cctx_order: dict, bot: Bot) -> Order:
         order_type=cctx_order["type"],
         side=cctx_order["side"],
         timestamp=datetime.fromtimestamp(
-            cctx_order["timestamp"], tz=pytz.timezone("UTC")
+            cctx_order["timestamp"] / 1000, tz=pytz.timezone("UTC")
         ),
         price=cctx_order["price"],
         amount=cctx_order["amount"],
