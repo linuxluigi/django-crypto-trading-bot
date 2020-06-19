@@ -96,9 +96,6 @@ class OrderAdmin(admin.ModelAdmin):
                     "price",
                     "amount",
                     "filled",
-                    "fee_currency",
-                    "fee_cost",
-                    "fee_rate",
                 ]
             },
         ),
@@ -125,9 +122,6 @@ class OrderAdmin(admin.ModelAdmin):
         "price",
         "amount",
         "filled",
-        "fee_currency",
-        "fee_cost",
-        "fee_rate",
     ]
 
     # inlines = [TradeInline]
