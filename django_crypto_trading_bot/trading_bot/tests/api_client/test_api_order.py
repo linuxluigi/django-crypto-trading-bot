@@ -22,6 +22,7 @@ from django_crypto_trading_bot.trading_bot.tests.api_client.api_data_example imp
 from django_crypto_trading_bot.trading_bot.tests.factories import (
     AccountFactory,
     BotFactory,
+    BtcCurrencyFactory,
     BuyOrderFactory,
     EthCurrencyFactory,
 )
@@ -108,3 +109,6 @@ def test_update_order_from_api_response():
     # assert order
     assert order.status == order_dict["status"]
     assert order.filled == order_dict["filled"]
+    assert order.fee_currency == BtcCurrencyFactory()
+    assert "{:.4f}".format(order.fee_cost) == "{:.4f}".format(order_dict["fee"]["cost"])
+    assert "{:.4f}".format(order.fee_rate) == "{:.4f}".format(order_dict["fee"]["rate"])

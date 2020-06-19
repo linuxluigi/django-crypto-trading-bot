@@ -62,7 +62,7 @@ class Account(models.Model):
         )
 
     def __str__(self):
-        return "{0}: {1}".format(self.exchange, self.user.get_username())
+        return "{0}: {1} - {2}".format(self.pk, self.exchange, self.user.get_username())
 
 
 class Currency(models.Model):
@@ -147,6 +147,11 @@ class Bot(models.Model):
         max_length=10, choices=Timeframes.choices, default=Timeframes.MONTH_1
     )
 
+    def __str__(self):
+        return "{0}: {1} - {2}".format(
+            self.pk, self.account.user.get_username(), self.market
+        )
+
 
 class Order(models.Model):
     """
@@ -177,7 +182,6 @@ class Order(models.Model):
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.OPEN
     )
-    exchange = models.CharField(max_length=250, choices=Exchanges.choices)
     order_type = models.CharField(max_length=8, choices=OrderType.choices)
     side = models.CharField(max_length=4, choices=Side.choices)
     price = models.DecimalField(max_digits=30, decimal_places=8)  # quote currency
@@ -189,6 +193,15 @@ class Order(models.Model):
     )  # filled amount of base currency
     next_order = models.ForeignKey(
         "self", on_delete=models.CASCADE, blank=True, null=True
+    )
+    fee_currency = models.ForeignKey(
+        Currency, on_delete=models.PROTECT, blank=True, null=True
+    )
+    fee_cost = models.DecimalField(
+        max_digits=30, decimal_places=8, blank=True, null=True
+    )
+    fee_rate = models.DecimalField(
+        max_digits=30, decimal_places=8, blank=True, null=True
     )
 
     def remaining(self) -> Decimal:
@@ -203,6 +216,28 @@ class Order(models.Model):
         """
         return self.filled * self.price
 
+    def base_amount(self) -> Decimal:
+        """
+        Get base amount minus cost
+        Returns:
+            Decimal -- [description]
+        """
+        if self.fee_cost and self.bot.market.base == self.fee_currency:
+            return self.filled - self.fee_cost
+
+        return self.filled
+
+    def quote_amount(self) -> Decimal:
+        """
+        Get quote amount minus cost
+        Returns:
+            Decimal -- [description]
+        """
+        if self.fee_cost and self.bot.market.quote == self.fee_currency:
+            return self.cost() - self.fee_cost
+
+        return self.cost()
+
     def get_retrade_amount(self) -> Decimal:
         """
         get retrade amount
@@ -214,13 +249,18 @@ class Order(models.Model):
             getcontext().prec = self.bot.market.precision_amount
         getcontext().rounding = ROUND_DOWN
 
-        amount: Decimal = self.amount - (self.amount * Decimal(0.01))
+        amount: Decimal = self.amount
+        if self.fee_cost:
+            amount -= self.fee_cost
         amount -= amount % self.bot.market.limits_amount_min
 
         if self.bot.market.precision_amount == 0:
             return Decimal(int(self.bot.market.get_min_max_order_amount(amount=amount)))
 
         return self.bot.market.get_min_max_order_amount(amount=amount)
+
+    def __str__(self):
+        return "{0}: {1}".format(self.pk, self.order_id)
 
 
 class Trade(models.Model):
@@ -284,6 +324,9 @@ class OrderErrorLog(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     error_type = models.CharField(max_length=50, choices=ErrorTypes.choices)
     error_message = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return "{0}: {1}".format(self.created, self.error_type)
 
 
 class OHLCV(models.Model):

@@ -93,6 +93,15 @@ def update_order_from_api_response(cctx_order: dict, order: Order) -> Order:
     order.status = cctx_order["status"]
     order.filled = Decimal(cctx_order["filled"])
 
+    if "fee" in cctx_order:
+        if cctx_order["fee"]:
+            currency, c_created = Currency.objects.get_or_create(
+                short=cctx_order["fee"]["currency"],
+            )
+            order.fee_currency = currency
+            order.fee_cost = Decimal(cctx_order["fee"]["cost"])
+            order.fee_rate = Decimal(cctx_order["fee"]["rate"])
+
     if order.filled:
         if cctx_order["trades"]:
             for order_trade in cctx_order["trades"]:

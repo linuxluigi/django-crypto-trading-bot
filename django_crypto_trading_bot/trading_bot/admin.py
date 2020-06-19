@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import OHLCV, Account, Bot, Currency, Market, Order, Trade, OrderErrorLog
+from .models import OHLCV, Account, Bot, Currency, Market, Order, OrderErrorLog, Trade
 
 
 class BotInline(admin.TabularInline):
@@ -88,7 +88,7 @@ class BotAdmin(admin.ModelAdmin):
 
 class OrderAdmin(admin.ModelAdmin):
     fieldsets = [
-        ("Base", {"fields": ["bot", "exchange"]}),
+        ("Base", {"fields": ["bot"]}),
         (
             "Order",
             {
@@ -105,25 +105,24 @@ class OrderAdmin(admin.ModelAdmin):
                 ]
             },
         ),
+        ("Fee", {"fields": ["fee_currency", "fee_cost", "fee_rate"]}),
     ]
 
     list_display = (
         "next_order",
         "order_id",
         "bot",
-        "exchange",
         "timestamp",
         "status",
         "side",
         "price",
     )
-    list_filter = ["bot", "exchange", "timestamp", "status", "side"]
+    list_filter = ["bot", "timestamp", "status", "side"]
     search_fields = [
         "bot",
         "order_id",
         "timestamp",
         "status",
-        "exchange",
         "order_type",
         "side",
         "price",
