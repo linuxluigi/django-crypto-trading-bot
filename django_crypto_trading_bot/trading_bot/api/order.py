@@ -8,7 +8,13 @@ from ccxt import Exchange
 from django.utils import timezone
 
 from django_crypto_trading_bot.trading_bot.api.client import get_client
-from django_crypto_trading_bot.trading_bot.models import Bot, Currency, Market, Order
+from django_crypto_trading_bot.trading_bot.models import (
+    Bot,
+    Currency,
+    Market,
+    Order,
+    Trade,
+)
 
 
 def create_order(
@@ -79,18 +85,33 @@ def create_order_from_api_response(cctx_order: dict, bot: Bot) -> Order:
         filled=Decimal(cctx_order["filled"]),
     )
 
+
 def update_order_from_api_response(cctx_order: dict, order: Order) -> Order:
     """
     Parse API response to update a order object
     """
-    if order.status == Order.Status.REORDERD:
-        # todo do not change order when already reorderd
-        return order
-    if order.status != cctx_order["status"]:
-        # todo trigger event when status changed
-        pass
     order.status = cctx_order["status"]
-    order.filled = cctx_order["filled"]
+    order.filled = Decimal(cctx_order["filled"])
+
+    if order.filled:
+        for order_trade in cctx_order["trades"]:
+            currency, c_created = Currency.objects.get_or_create(
+                short=order_trade["fee"]["currency"],
+            )
+
+            trade, created = Trade.objects.get_or_create(
+                order=order,
+                trade_id=order_trade["id"],
+                timestamp=datetime.fromtimestamp(
+                    order_trade["timestamp"] / 1000, tz=pytz.timezone("UTC")
+                ),
+                taker_or_maker=order_trade["takerOrMaker"],
+                amount=Decimal(order_trade["amount"]),
+                fee_currency=currency,
+                fee_cost=Decimal(order_trade["fee"]["cost"]),
+                fee_rate=Decimal(order_trade["fee"]["rate"]),
+            )
+
     order.save()
     return order
 

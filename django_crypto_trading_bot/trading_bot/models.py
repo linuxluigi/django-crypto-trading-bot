@@ -22,6 +22,24 @@ from .api.client import get_client
 logger = logging.getLogger(__name__)
 
 
+class Timeframes(models.TextChoices):
+    MINUTE_1 = "1m"
+    MINUTE_3 = "3m"
+    MINUTE_5 = "5m"
+    MINUTE_15 = "15m"
+    MINUTE_30 = "30m"
+    HOUR_1 = "1h"
+    HOUR_2 = "2h"
+    HOUR_4 = "4h"
+    HOUR_6 = "6h"
+    HOUR_8 = "8h"
+    HOUR_12 = "12h"
+    DAY_1 = "1d"
+    DAY_3 = "3d"
+    WEEK_1 = "1w"
+    MONTH_1 = "1M"
+
+
 class Exchanges(models.TextChoices):
     BINANCE = "binance"
 
@@ -125,12 +143,9 @@ class Bot(models.Model):
         Market, on_delete=models.PROTECT
     )  # Cryptomarket like TRX/BNB
     created = models.DateTimeField(auto_now_add=True)
-    day_span = models.IntegerField(
-        default=30
-    )  # how many days will be analysed for new trading order
-    min_profit = models.DecimalField(
-        max_digits=30, decimal_places=2, default=0.1
-    )  # min profit for each trade in percent
+    timeframe = models.CharField(
+        max_length=10, choices=Timeframes.choices, default=Timeframes.MONTH_1
+    )
 
 
 class Order(models.Model):
@@ -145,7 +160,6 @@ class Order(models.Model):
         CANCELED = "canceled"
         EXPIRED = "expired"
         REJECTED = "rejected"
-        REORDERD = "reorderd"
 
     # ORDER_TYPE_CHOICE
     class OrderType(models.TextChoices):
@@ -174,8 +188,6 @@ class Order(models.Model):
         max_digits=30, decimal_places=8, default=0
     )  # filled amount of base currency
 
-    # reorder = models.ForeignKey("self", blank=True, null=True, on_delete=models.CASCADE)
-
     def remaining(self) -> Decimal:
         """
         remaining amount to fill
@@ -187,31 +199,6 @@ class Order(models.Model):
         'filled' * 'price' (filling price used where available)
         """
         return self.filled * self.price
-
-    def base_amount(self) -> Decimal:
-        """
-        Get base amount minus cost
-
-        Returns:
-            Decimal -- [description]
-        """
-
-        if self.bot.market.base == self.fee_currency:
-            return self.filled - self.fee_cost
-
-        return self.filled
-
-    def quote_amount(self) -> Decimal:
-        """
-        Get quote amount minus cost
-
-        Returns:
-            Decimal -- [description]
-        """
-        if self.bot.market.quote == self.fee_currency:
-            return self.cost() - self.fee_cost
-
-        return self.cost()
 
 
 class Trade(models.Model):
@@ -270,23 +257,6 @@ class OHLCV(models.Model):
     OHLCV candles https://github.com/ccxt/ccxt/wiki/Manual#ohlcv-structure
     """
 
-    class Timeframes(models.TextChoices):
-        MINUTE_1 = "1m"
-        MINUTE_3 = "3m"
-        MINUTE_5 = "5m"
-        MINUTE_15 = "15m"
-        MINUTE_30 = "30m"
-        HOUR_1 = "1h"
-        HOUR_2 = "2h"
-        HOUR_4 = "4h"
-        HOUR_6 = "6h"
-        HOUR_8 = "8h"
-        HOUR_12 = "12h"
-        DAY_1 = "1d"
-        DAY_3 = "3d"
-        WEEK_1 = "1w"
-        MONTH_1 = "1M"
-
     market = models.ForeignKey(Market, on_delete=models.PROTECT)
     timeframe = models.CharField(max_length=10, choices=Timeframes.choices)
     timestamp = models.DateTimeField()
@@ -297,7 +267,7 @@ class OHLCV(models.Model):
     volume = models.DecimalField(max_digits=30, decimal_places=8)
 
     @staticmethod
-    def get_OHLCV(candle: List[float], timeframe: Timeframes, market: Market) -> OHLCV:
+    def get_OHLCV(candle: List[float], timeframe: str, market: Market) -> OHLCV:
         """Get a OHLCV candle from a OHLCV request
 
         Arguments:
@@ -434,48 +404,3 @@ class OHLCV(models.Model):
         # Close the pool and wait for the work to finish
         pool.close()
         pool.join()
-
-
-class Simulation(models.Model):
-    """
-    Simulation results
-    """
-
-    market = models.ForeignKey(
-        Market, on_delete=models.PROTECT
-    )  # Cryptomarket like TRX/BNB
-    created = models.DateTimeField(auto_now_add=True)
-    day_span = models.IntegerField(
-        default=30
-    )  # how many days will be analysed for new trading order
-    min_profit = models.DecimalField(
-        max_digits=30, decimal_places=2, default=Decimal(0.1)
-    )  # min profit for each trade in percent
-    history_days = models.IntegerField(default=365)  # how many days will be simulated
-    start_simulation = models.DateTimeField()  # time begin of the first simulation
-    end_simulation = models.DateTimeField()  # time end of the last simulation
-    simulation_amount = models.IntegerField()  # how many simulation was used
-    start_amount_quote = models.DecimalField(
-        max_digits=30, decimal_places=8
-    )  # start quote amount for each simulation
-    end_amount_quote_average = models.DecimalField(
-        max_digits=30, decimal_places=8
-    )  # average end amount of all simulations
-    roi_min = models.DecimalField(
-        max_digits=30, decimal_places=8
-    )  # return of investment minimum
-    roi_average = models.DecimalField(
-        max_digits=30, decimal_places=8
-    )  # return of investment average
-    roi_max = models.DecimalField(
-        max_digits=30, decimal_places=8
-    )  # return of investment maximum
-
-    def __str__(self):
-        return "{0}: {1}d | {2}% | {3} hd | {4:.2f} roi".format(
-            self.market.symbol,
-            self.day_span,
-            self.min_profit,
-            self.history_days,
-            self.roi_average,
-        )

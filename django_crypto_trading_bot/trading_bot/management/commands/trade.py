@@ -8,7 +8,7 @@ from django_crypto_trading_bot.trading_bot.api.order import (
     create_order,
     update_all_open_orders,
 )
-from django_crypto_trading_bot.trading_bot.models import OHLCV, Order, Trade
+from django_crypto_trading_bot.trading_bot.models import OHLCV, Order, Timeframes, Trade
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +25,17 @@ class Command(BaseCommand):
 
             candles: List[List[float]] = exchange.fetch_ohlcv(
                 symbol=trade.order.bot.market.symbol,
-                timeframe=OHLCV.Timeframes.MONTH_1,
+                timeframe=Timeframes.MONTH_1,
                 limit=1,
             )
 
             candle: OHLCV = OHLCV.get_OHLCV(
                 candle=candles[0],
-                timeframe=OHLCV.Timeframes.MONTH_1,
+                timeframe=Timeframes.MONTH_1,
                 market=trade.order.bot.market,
             )
+
+            # todo add exceptions -> https://github.com/ccxt/ccxt/blob/master/python/ccxt/binance.py
 
             if trade.order.side == Order.Side.SIDE_BUY:
                 trade.re_order = create_order(

@@ -6,7 +6,13 @@ from django.utils import timezone
 from factory import DjangoModelFactory, SubFactory
 
 from config.settings.base import env
-from django_crypto_trading_bot.trading_bot.models import OHLCV, Exchanges, Order, Trade
+from django_crypto_trading_bot.trading_bot.models import (
+    OHLCV,
+    Exchanges,
+    Order,
+    Timeframes,
+    Trade,
+)
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 
 
@@ -50,6 +56,11 @@ class UsdtCurrencyFactory(TrxCurrencyFactory):
     short = "USDT"
 
 
+class EthCurrencyFactory(TrxCurrencyFactory):
+    name = "Ethereum"
+    short = "ETH"
+
+
 class MarketFactory(DjangoModelFactory):
     class Meta:
         model = "trading_bot.Market"
@@ -90,7 +101,6 @@ class BotFactory(DjangoModelFactory):
 
     account = SubFactory(AccountFactory)
     market = SubFactory(MarketFactory)
-    day_span = 1
 
 
 class BuyOrderFactory(DjangoModelFactory):
@@ -107,9 +117,6 @@ class BuyOrderFactory(DjangoModelFactory):
     price = 1
     amount = 100
     filled = 100
-    fee_currency = SubFactory(BnbCurrencyFactory)
-    fee_cost = 1
-    fee_rate = 1
 
 
 class SellOrderFactory(BuyOrderFactory):
@@ -138,7 +145,7 @@ class OHLCVBnbEurFactory(DjangoModelFactory):
         django_get_or_create = ["market", "timestamp", "timeframe"]
 
     market = SubFactory(BnbEurMarketFactory)
-    timeframe = OHLCV.Timeframes.MINUTE_1
+    timeframe = Timeframes.MINUTE_1
     timestamp = datetime(
         year=2020, month=4, day=30, hour=23, tzinfo=pytz.timezone("UTC")
     )

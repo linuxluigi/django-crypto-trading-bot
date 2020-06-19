@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import OHLCV, Account, Bot, Currency, Market, Order, Simulation, Trade
+from .models import OHLCV, Account, Bot, Currency, Market, Order, Trade
 
 
 class BotInline(admin.TabularInline):
@@ -69,13 +69,13 @@ class MarketAdmin(admin.ModelAdmin):
 class BotAdmin(admin.ModelAdmin):
     fieldsets = [
         ("Base", {"fields": ["account", "market"]}),
-        ("Settings", {"fields": ["day_span", "min_profit"]}),
+        ("Settings", {"fields": ["timeframe"]}),
     ]
 
     readonly_fields = ("created",)
 
-    list_display = ("account", "market", "created", "day_span", "min_profit")
-    list_filter = ["account", "day_span", "min_profit"]
+    list_display = ("account", "market", "created", "timeframe")
+    list_filter = ["account", "timeframe"]
     search_fields = ["account", "market", "created"]
 
     inlines = [OrderInline]
@@ -215,46 +215,6 @@ class OHLCVAdmin(admin.ModelAdmin):
     ]
 
 
-class SimulationAdmin(admin.ModelAdmin):
-    # fieldsets = [
-    #     (
-    #         "Setup",
-    #         {
-    #             "fields": [
-    #                 "market",
-    #                 "created",
-    #                 "day_span",
-    #                 "min_profit",
-    #                 "history_days",
-    #                 "start_amount_eur",
-    #             ]
-    #         },
-    #         "Simulation Stats",
-    #         {"fields": ["start_simulation", "end_simulation", "simulation_amount",]},
-    #         "Return of Investment",
-    #         {
-    #             "fields": [
-    #                 "end_amount_eur_average",
-    #                 "roi_min",
-    #                 "roi_average",
-    #                 "roi_max",
-    #             ]
-    #         },
-    #     ),
-    # ]
-
-    list_display = (
-        "market",
-        "created",
-        "day_span",
-        "min_profit",
-        "history_days",
-        "simulation_amount",
-        "roi_average",
-    )
-    list_filter = ["created", "day_span", "min_profit", "history_days", "market"]
-
-
 admin.site.register(Account, AccountAdmin)
 admin.site.register(Bot, BotAdmin)
 admin.site.register(Currency, CurrencyAdmin)
@@ -262,4 +222,3 @@ admin.site.register(Market, MarketAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Trade, TradeAdmin)
 admin.site.register(OHLCV, OHLCVAdmin)
-admin.site.register(Simulation, SimulationAdmin)

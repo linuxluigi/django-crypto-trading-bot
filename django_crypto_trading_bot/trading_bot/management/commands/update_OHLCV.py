@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from django_crypto_trading_bot.trading_bot.models import OHLCV
+from django_crypto_trading_bot.trading_bot.models import OHLCV, Timeframes
 
 
 class Command(BaseCommand):
@@ -11,9 +11,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "--timeframe",
             nargs="?",
-            type=OHLCV.Timeframes,
+            type=Timeframes,
             help="Timeframe like 1m, 1h, 1d, 1w, 1M, ...",
-            default=OHLCV.Timeframes.DAY_1,
+            default=Timeframes.DAY_1,
         )
 
     def handle(self, *args, **options):

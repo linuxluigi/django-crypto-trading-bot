@@ -12,6 +12,7 @@ from django_crypto_trading_bot.trading_bot.models import (
     Account,
     Exchanges,
     Market,
+    Timeframes,
 )
 
 from .factories import AccountFactory, MarketFactory, TradeFactory, UserFactory
@@ -45,7 +46,7 @@ def test_symbol():
 def test_get_OHLCV():
 
     market: Market = MarketFactory()
-    timeframe: OHLCV.Timeframes = OHLCV.Timeframes.HOUR_1
+    timeframe: Timeframes = Timeframes.HOUR_1
 
     test_candel: List[float] = [
         1504541580000,  # UTC timestamp in milliseconds, integer
@@ -76,7 +77,7 @@ def test_get_OHLCV():
 def test_create_OHLCV():
 
     market: Market = MarketFactory()
-    timeframe: OHLCV.Timeframes = OHLCV.Timeframes.HOUR_1
+    timeframe: Timeframes = Timeframes.HOUR_1
 
     test_candel: List[float] = [
         1504541580000,  # UTC timestamp in milliseconds, integer
@@ -107,7 +108,7 @@ def test_create_OHLCV():
 @pytest.mark.django_db()
 def test_last_candle():
     market: Market = MarketFactory()
-    timeframe: OHLCV.Timeframes = OHLCV.Timeframes.MINUTE_1
+    timeframe: Timeframes = Timeframes.MINUTE_1
 
     # test without any candle
     assert OHLCV.last_candle(timeframe=timeframe, market=market) is None
@@ -140,10 +141,9 @@ def test_update_new_candles():
     market: Market = MarketFactory()
 
     # update market with timeframe of 1 month
-    OHLCV.update_new_candles(timeframe=OHLCV.Timeframes.MONTH_1, market=MarketFactory())
+    OHLCV.update_new_candles(timeframe=Timeframes.MONTH_1, market=MarketFactory())
     assert (
-        OHLCV.objects.filter(timeframe=OHLCV.Timeframes.MONTH_1, market=market).count()
-        > 20
+        OHLCV.objects.filter(timeframe=Timeframes.MONTH_1, market=market).count() > 20
     )
 
     # update 550 candles
@@ -151,14 +151,12 @@ def test_update_new_candles():
     exchange_time: int = exchange.milliseconds()
     OHLCV.create_OHLCV(
         candle=[exchange_time - 550 * 1000 * 60, 0, 0, 0, 0, 0],
-        timeframe=OHLCV.Timeframes.MINUTE_1,
+        timeframe=Timeframes.MINUTE_1,
         market=market,
     )
-    OHLCV.update_new_candles(
-        timeframe=OHLCV.Timeframes.MINUTE_1, market=MarketFactory()
-    )
+    OHLCV.update_new_candles(timeframe=Timeframes.MINUTE_1, market=MarketFactory())
     candles_amount: int = OHLCV.objects.filter(
-        timeframe=OHLCV.Timeframes.MINUTE_1, market=market
+        timeframe=Timeframes.MINUTE_1, market=market
     ).count()
     assert candles_amount >= 550
     assert candles_amount <= 553
@@ -169,8 +167,8 @@ def test_update_new_candles():
 #     market: Market = MarketFactory()
 
 #     # update market with timeframe of 1 month
-#     OHLCV.update_new_candles_all_markets(timeframe=OHLCV.Timeframes.MONTH_1)
+#     OHLCV.update_new_candles_all_markets(timeframe=Timeframes.MONTH_1)
 #     assert (
-#         OHLCV.objects.filter(timeframe=OHLCV.Timeframes.MONTH_1, market=market).count()
+#         OHLCV.objects.filter(timeframe=Timeframes.MONTH_1, market=market).count()
 #         > 20
 #     )

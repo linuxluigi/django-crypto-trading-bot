@@ -3,8 +3,8 @@ from decimal import Decimal
 import pytest
 from django.conf import settings
 from django.test import RequestFactory
+
 from django_crypto_trading_bot.trading_bot.models import OHLCV, Account, Market
-from django_crypto_trading_bot.trading_bot.simulation.simulation import Simulation
 from django_crypto_trading_bot.trading_bot.tests.factories import (
     AccountFactory,
     BnbCurrencyFactory,
@@ -22,13 +22,6 @@ from django_crypto_trading_bot.trading_bot.tests.factories import (
 @pytest.fixture
 def request_factory() -> RequestFactory:
     return RequestFactory()
-
-
-@pytest.fixture
-def simulation() -> Simulation:
-    BnbEurMarketFactory()
-    market: Market = MarketFactory()
-    return Simulation(markets=[market])
 
 
 @pytest.fixture

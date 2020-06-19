@@ -6,20 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('trading_bot', '0003_auto_20200618_1125'),
+        ("trading_bot", "0003_auto_20200618_1125"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='order',
-            name='fee_cost',
-        ),
-        migrations.RemoveField(
-            model_name='order',
-            name='fee_currency',
-        ),
-        migrations.RemoveField(
-            model_name='order',
-            name='fee_rate',
-        ),
+        migrations.RemoveField(model_name="order", name="fee_cost",),
+        migrations.RemoveField(model_name="order", name="fee_currency",),
+        migrations.RemoveField(model_name="order", name="fee_rate",),
     ]

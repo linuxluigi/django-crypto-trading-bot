@@ -1,19 +1,30 @@
-import pytest
-from ccxt import Exchange
+from datetime import datetime
 from decimal import Decimal
+from typing import List
+
+import pytest
+import pytz
+from ccxt import Exchange
 
 from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.api.market import (
     get_all_markets_from_exchange,
     get_or_create_market,
 )
-from django_crypto_trading_bot.trading_bot.api.order import create_order
-from django_crypto_trading_bot.trading_bot.models import Order, Market, Bot
+from django_crypto_trading_bot.trading_bot.api.order import (
+    create_order,
+    update_order_from_api_response,
+)
+from django_crypto_trading_bot.trading_bot.models import Bot, Market, Order, Trade
+from django_crypto_trading_bot.trading_bot.tests.api_client.api_data_example import (
+    order_structure,
+)
 from django_crypto_trading_bot.trading_bot.tests.factories import (
     AccountFactory,
     BotFactory,
+    BuyOrderFactory,
+    EthCurrencyFactory,
 )
-from typing import List
 
 
 @pytest.mark.django_db()
@@ -66,3 +77,34 @@ def test_get_all_markets_from_exchange():
 
     # compare loaded markets with binance
     assert len(markets) == len(exchange.markets.values())
+
+
+@pytest.mark.django_db()
+def test_update_order_from_api_response():
+    order: Order = BuyOrderFactory()
+
+    order_dict: dict = order_structure(add_trades=True)
+
+    order = update_order_from_api_response(cctx_order=order_dict, order=order)
+
+    trade: Trade = Trade.objects.get(trade_id=order_dict["trades"][0]["id"])
+
+    # assert trade
+    assert trade.order == order
+    assert trade.trade_id == order_dict["trades"][0]["id"]
+    assert trade.timestamp == datetime.fromtimestamp(
+        order_dict["trades"][0]["timestamp"] / 1000, tz=pytz.timezone("UTC")
+    )
+    assert trade.taker_or_maker == order_dict["trades"][0]["takerOrMaker"]
+    assert trade.amount == Decimal(order_dict["trades"][0]["amount"])
+    assert trade.fee_currency == EthCurrencyFactory()
+    assert "{:.4f}".format(trade.fee_cost) == "{:.4f}".format(
+        order_dict["trades"][0]["fee"]["cost"]
+    )
+    assert "{:.4f}".format(trade.fee_rate) == "{:.4f}".format(
+        order_dict["trades"][0]["fee"]["rate"]
+    )
+
+    # assert order
+    assert order.status == order_dict["status"]
+    assert order.filled == order_dict["filled"]
