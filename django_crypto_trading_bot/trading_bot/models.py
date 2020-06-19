@@ -210,10 +210,16 @@ class Order(models.Model):
         Returns:
             Decimal -- retrade amount
         """
-        getcontext().prec = self.bot.market.precision_amount
+        if self.bot.market.precision_amount > 0:
+            getcontext().prec = self.bot.market.precision_amount
         getcontext().rounding = ROUND_DOWN
+
         amount: Decimal = self.amount - (self.amount * Decimal(0.01))
         amount -= amount % self.bot.market.limits_amount_min
+
+        if self.bot.market.precision_amount == 0:
+            return Decimal(int(self.bot.market.get_min_max_order_amount(amount=amount)))
+
         return self.bot.market.get_min_max_order_amount(amount=amount)
 
 

@@ -20,7 +20,7 @@ class Command(BaseCommand):
         update_all_open_orders()
 
         order: Order
-        for order in Order.objects.filter(next_order=None):
+        for order in Order.objects.filter(next_order=None, status=Order.Status.CLOSED):
             exchange: Exchange = order.bot.account.get_account_client()
 
             candles: List[List[float]] = exchange.fetch_ohlcv(
