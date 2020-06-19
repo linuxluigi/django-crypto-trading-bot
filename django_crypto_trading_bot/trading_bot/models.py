@@ -187,6 +187,9 @@ class Order(models.Model):
     filled = models.DecimalField(
         max_digits=30, decimal_places=8, default=0
     )  # filled amount of base currency
+    next_order = models.ForeignKey(
+        "self", on_delete=models.CASCADE, blank=True, null=True
+    )
 
     def remaining(self) -> Decimal:
         """
@@ -200,16 +203,31 @@ class Order(models.Model):
         """
         return self.filled * self.price
 
+    def get_retrade_amount(self) -> Decimal:
+        """
+        get retrade amount
+
+        Returns:
+            Decimal -- retrade amount
+        """
+        getcontext().prec = self.bot.market.precision_amount
+        getcontext().rounding = ROUND_DOWN
+        amount: Decimal = self.amount - (self.amount * Decimal(0.01))
+        amount -= amount % self.bot.market.limits_amount_min
+        return self.bot.market.get_min_max_order_amount(amount=amount)
+
 
 class Trade(models.Model):
     """
     Trade based on https://github.com/ccxt/ccxt/wiki/Manual#trade-structure
     """
 
-    order = models.ForeignKey(Order, related_name="order", on_delete=models.CASCADE)
-    re_order = models.ForeignKey(
-        Order, related_name="re_order", on_delete=models.CASCADE, blank=True, null=True
+    order = models.ForeignKey(
+        Order, related_name="trade_order", on_delete=models.CASCADE
     )
+    # re_order = models.ForeignKey(
+    #     Order, related_name="re_order", on_delete=models.CASCADE, blank=True, null=True
+    # )
     trade_id = models.CharField(max_length=255, unique=True)
     timestamp = models.DateTimeField()
     taker_or_maker = models.CharField(max_length=8, choices=Order.OrderType.choices)

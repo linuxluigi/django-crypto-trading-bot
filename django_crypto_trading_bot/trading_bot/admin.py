@@ -88,6 +88,7 @@ class OrderAdmin(admin.ModelAdmin):
             "Order",
             {
                 "fields": [
+                    "next_order",
                     "order_id",
                     "timestamp",
                     "status",
@@ -102,6 +103,7 @@ class OrderAdmin(admin.ModelAdmin):
     ]
 
     list_display = (
+        "next_order",
         "order_id",
         "bot",
         "exchange",
