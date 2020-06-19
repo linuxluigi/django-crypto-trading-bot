@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import OHLCV, Account, Bot, Currency, Market, Order, Trade
+from .models import OHLCV, Account, Bot, Currency, Market, Order, Trade, OrderErrorLog
 
 
 class BotInline(admin.TabularInline):
@@ -15,6 +15,11 @@ class OrderInline(admin.TabularInline):
 
 class TradeInline(admin.TabularInline):
     model = Trade
+    extra = 0
+
+
+class ErrorInline(admin.TabularInline):
+    model = OrderErrorLog
     extra = 0
 
 
@@ -127,6 +132,7 @@ class OrderAdmin(admin.ModelAdmin):
     ]
 
     # inlines = [TradeInline]
+    inlines = [ErrorInline]
 
 
 class TradeAdmin(admin.ModelAdmin):

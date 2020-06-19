@@ -276,6 +276,16 @@ class Trade(models.Model):
         return self.order.bot.market.get_min_max_price(price=price)
 
 
+class OrderErrorLog(models.Model):
+    class ErrorTypes(models.TextChoices):
+        Insufficient_Funds = "Insufficient Funds"
+
+    order = models.ForeignKey(Order, related_name="error_log", on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    error_type = models.CharField(max_length=50, choices=ErrorTypes.choices)
+    error_message = models.TextField(blank=True, null=True)
+
+
 class OHLCV(models.Model):
     """
     OHLCV candles https://github.com/ccxt/ccxt/wiki/Manual#ohlcv-structure
