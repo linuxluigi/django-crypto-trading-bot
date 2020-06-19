@@ -94,23 +94,26 @@ def update_order_from_api_response(cctx_order: dict, order: Order) -> Order:
     order.filled = Decimal(cctx_order["filled"])
 
     if order.filled:
-        for order_trade in cctx_order["trades"]:
-            currency, c_created = Currency.objects.get_or_create(
-                short=order_trade["fee"]["currency"],
-            )
+        if "trades" in cctx_order:
+            for order_trade in cctx_order["trades"]:
+                currency, c_created = Currency.objects.get_or_create(
+                    short=order_trade["fee"]["currency"],
+                )
 
-            trade, created = Trade.objects.get_or_create(
-                order=order,
-                trade_id=order_trade["id"],
-                timestamp=datetime.fromtimestamp(
-                    order_trade["timestamp"] / 1000, tz=pytz.timezone("UTC")
-                ),
-                taker_or_maker=order_trade["takerOrMaker"],
-                amount=Decimal(order_trade["amount"]),
-                fee_currency=currency,
-                fee_cost=Decimal(order_trade["fee"]["cost"]),
-                fee_rate=Decimal(order_trade["fee"]["rate"]),
-            )
+                trade, created = Trade.objects.get_or_create(
+                    order=order,
+                    trade_id=order_trade["id"],
+                    timestamp=datetime.fromtimestamp(
+                        order_trade["timestamp"] / 1000, tz=pytz.timezone("UTC")
+                    ),
+                    taker_or_maker=order_trade["takerOrMaker"],
+                    amount=Decimal(order_trade["amount"]),
+                    fee_currency=currency,
+                    fee_cost=Decimal(order_trade["fee"]["cost"]),
+                    fee_rate=Decimal(order_trade["fee"]["rate"]),
+                )
+            else:
+                print(cctx_order)
 
     order.save()
     return order
