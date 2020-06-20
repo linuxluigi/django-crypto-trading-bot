@@ -14,7 +14,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
 
         parser.add_argument(
-            "--amount", nargs="?", type=int, help="Init Trade Amount", default=1,
+            "--amount", nargs="?", type=float, help="Init Trade Amount", default=1,
         )
 
         parser.add_argument(
