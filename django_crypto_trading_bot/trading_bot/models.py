@@ -263,6 +263,15 @@ class Order(models.Model):
         return "{0}: {1}".format(self.pk, self.order_id)
 
 
+class Saving(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    bot = models.ForeignKey(Bot, on_delete=models.CASCADE)
+    amount = models.DecimalField(
+        max_digits=30, decimal_places=8
+    )  # ordered amount of base currency
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
+
+
 class Trade(models.Model):
     """
     Trade based on https://github.com/ccxt/ccxt/wiki/Manual#trade-structure

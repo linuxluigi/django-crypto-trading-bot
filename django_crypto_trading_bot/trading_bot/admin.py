@@ -1,6 +1,16 @@
 from django.contrib import admin
 
-from .models import OHLCV, Account, Bot, Currency, Market, Order, OrderErrorLog, Trade
+from .models import (
+    OHLCV,
+    Account,
+    Bot,
+    Currency,
+    Market,
+    Order,
+    OrderErrorLog,
+    Trade,
+    Saving,
+)
 
 
 class BotInline(admin.TabularInline):
@@ -20,6 +30,11 @@ class TradeInline(admin.TabularInline):
 
 class ErrorInline(admin.TabularInline):
     model = OrderErrorLog
+    extra = 0
+
+
+class SavingInline(admin.TabularInline):
+    model = Saving
     extra = 0
 
 
@@ -83,7 +98,7 @@ class BotAdmin(admin.ModelAdmin):
     list_filter = ["account", "timeframe"]
     search_fields = ["account", "market", "created"]
 
-    inlines = [OrderInline]
+    inlines = [OrderInline, SavingInline]
 
 
 class OrderAdmin(admin.ModelAdmin):

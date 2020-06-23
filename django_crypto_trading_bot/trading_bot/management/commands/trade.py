@@ -1,4 +1,5 @@
 import logging
+from decimal import ROUND_DOWN, Decimal, getcontext
 from typing import List
 
 from ccxt.base.errors import InsufficientFunds
@@ -13,6 +14,7 @@ from django_crypto_trading_bot.trading_bot.models import (
     OHLCV,
     Order,
     OrderErrorLog,
+    Saving,
     Timeframes,
     Trade,
 )
@@ -43,6 +45,10 @@ class Command(BaseCommand):
             # todo add exceptions -> https://github.com/ccxt/ccxt/blob/master/python/ccxt/binance.py
 
             try:
+                getcontext().prec = order.bot.market.precision_amount
+                getcontext().rounding = ROUND_DOWN
+                saving_amount: Decimal = Decimal(0)
+
                 if order.side == Order.Side.SIDE_BUY:
                     order.next_order = create_order(
                         amount=order.get_retrade_amount(),
@@ -50,6 +56,19 @@ class Command(BaseCommand):
                         side=Order.Side.SIDE_SELL,
                         bot=order.bot,
                     )
+
+                    saving_amount = (
+                        order.amount - order.next_order.amount
+                    ) * order.price
+
+                    if saving_amount:
+                        Saving.objects.create(
+                            order=order,
+                            bot=order.bot,
+                            amount=saving_amount,
+                            currency=order.bot.market.quote,
+                        )
+
                 else:
                     order.next_order = create_order(
                         amount=order.get_retrade_amount(),
@@ -57,6 +76,16 @@ class Command(BaseCommand):
                         side=Order.Side.SIDE_BUY,
                         bot=order.bot,
                     )
+
+                    saving_amount = order.amount - order.next_order.amount
+
+                    if saving_amount:
+                        Saving.objects.create(
+                            order=order,
+                            bot=order.bot,
+                            amount=saving_amount,
+                            currency=order.bot.market.base,
+                        )
             except InsufficientFunds as e:
                 logger.info(
                     "create retrade error for {} with {}".format(order.__str__(), e)
