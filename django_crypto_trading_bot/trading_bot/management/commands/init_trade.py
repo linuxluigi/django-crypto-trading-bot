@@ -21,6 +21,12 @@ class Command(BaseCommand):
             "--bot_id", nargs="?", type=int, help="bot_id",
         )
 
+        parser.add_argument(
+            "--sell_order",
+            action="store_true",
+            help="Create a sell order instead of a buy order.",
+        )
+
     def handle(self, *args, **options):
         bot: Bot = Bot.objects.get(pk=options["bot_id"])
 
@@ -34,10 +40,20 @@ class Command(BaseCommand):
             candle=candles[0], timeframe=bot.timeframe, market=bot.market,
         )
 
-        order: Order = create_order(
-            amount=Decimal(options["amount"]),
-            price=candle.lowest_price,
-            side=Order.Side.SIDE_BUY,
-            bot=bot,
-        )
+        order: Order
+        if options["sell_order"]:
+            order = create_order(
+                amount=Decimal(options["amount"]),
+                price=candle.highest_price,
+                side=Order.Side.SIDE_SELL,
+                bot=bot,
+            )
+        else:
+            order = create_order(
+                amount=Decimal(options["amount"]),
+                price=candle.lowest_price,
+                side=Order.Side.SIDE_BUY,
+                bot=bot,
+            )
+
         order.save()
