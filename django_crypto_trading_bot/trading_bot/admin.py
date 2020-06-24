@@ -8,8 +8,8 @@ from .models import (
     Market,
     Order,
     OrderErrorLog,
-    Trade,
     Saving,
+    Trade,
 )
 
 
@@ -88,14 +88,14 @@ class MarketAdmin(admin.ModelAdmin):
 
 class BotAdmin(admin.ModelAdmin):
     fieldsets = [
-        ("Base", {"fields": ["account", "market"]}),
+        ("Base", {"fields": ["account", "market", "active"]}),
         ("Settings", {"fields": ["timeframe"]}),
     ]
 
     readonly_fields = ("created",)
 
-    list_display = ("account", "market", "created", "timeframe")
-    list_filter = ["account", "timeframe"]
+    list_display = ("account", "market", "created", "timeframe", "active")
+    list_filter = ["account", "timeframe", "active"]
     search_fields = ["account", "market", "created"]
 
     inlines = [OrderInline, SavingInline]

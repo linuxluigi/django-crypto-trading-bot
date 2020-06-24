@@ -146,6 +146,7 @@ class Bot(models.Model):
     timeframe = models.CharField(
         max_length=10, choices=Timeframes.choices, default=Timeframes.MONTH_1
     )
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return "{0}: {1} - {2}".format(
@@ -165,6 +166,7 @@ class Order(models.Model):
         CANCELED = "canceled"
         EXPIRED = "expired"
         REJECTED = "rejected"
+        NOT_MIN_NOTIONAL = "not min notional"
 
     # ORDER_TYPE_CHOICE
     class OrderType(models.TextChoices):
@@ -180,7 +182,7 @@ class Order(models.Model):
     order_id = models.CharField(max_length=255, unique=True)
     timestamp = models.DateTimeField()
     status = models.CharField(
-        max_length=10, choices=Status.choices, default=Status.OPEN
+        max_length=20, choices=Status.choices, default=Status.OPEN
     )
     order_type = models.CharField(max_length=8, choices=OrderType.choices)
     side = models.CharField(max_length=4, choices=Side.choices)

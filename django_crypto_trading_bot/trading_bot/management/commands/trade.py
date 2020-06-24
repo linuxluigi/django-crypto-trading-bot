@@ -45,47 +45,70 @@ class Command(BaseCommand):
             # todo add exceptions -> https://github.com/ccxt/ccxt/blob/master/python/ccxt/binance.py
 
             try:
-                getcontext().prec = order.bot.market.precision_amount
+                getcontext().prec = 8
                 getcontext().rounding = ROUND_DOWN
                 saving_amount: Decimal = Decimal(0)
+                retrade_amount: Decimal = order.get_retrade_amount()
 
-                if order.side == Order.Side.SIDE_BUY:
-                    order.next_order = create_order(
-                        amount=order.get_retrade_amount(),
-                        price=candle.highest_price,
-                        side=Order.Side.SIDE_SELL,
-                        bot=order.bot,
-                    )
-
-                    saving_amount = (
-                        order.amount - order.next_order.amount
-                    ) * order.price
-
-                    if saving_amount:
+                if retrade_amount < order.bot.market.limits_amount_min:
+                    if order.side == Order.Side.SIDE_BUY:
                         Saving.objects.create(
                             order=order,
                             bot=order.bot,
-                            amount=saving_amount,
+                            amount=order.amount * order.price,
                             currency=order.bot.market.quote,
                         )
-
-                else:
-                    order.next_order = create_order(
-                        amount=order.get_retrade_amount(),
-                        price=candle.lowest_price,
-                        side=Order.Side.SIDE_BUY,
-                        bot=order.bot,
-                    )
-
-                    saving_amount = order.amount - order.next_order.amount
-
-                    if saving_amount:
+                    else:
                         Saving.objects.create(
                             order=order,
                             bot=order.bot,
-                            amount=saving_amount,
+                            amount=order.amount,
                             currency=order.bot.market.base,
                         )
+
+                    order.bot.active = False
+                    order.status = Order.Status.NOT_MIN_NOTIONAL
+                    order.bot.save()
+                    order.save()
+
+                else:
+                    if order.side == Order.Side.SIDE_BUY:
+
+                        order.next_order = create_order(
+                            amount=retrade_amount,
+                            price=candle.highest_price,
+                            side=Order.Side.SIDE_SELL,
+                            bot=order.bot,
+                        )
+
+                        saving_amount = (order.amount - retrade_amount) * order.price
+
+                        if saving_amount:
+                            Saving.objects.create(
+                                order=order,
+                                bot=order.bot,
+                                amount=saving_amount,
+                                currency=order.bot.market.quote,
+                            )
+
+                    else:
+                        order.next_order = create_order(
+                            amount=retrade_amount,
+                            price=candle.lowest_price,
+                            side=Order.Side.SIDE_BUY,
+                            bot=order.bot,
+                        )
+
+                        saving_amount = order.amount - retrade_amount
+
+                        if saving_amount:
+                            Saving.objects.create(
+                                order=order,
+                                bot=order.bot,
+                                amount=saving_amount,
+                                currency=order.bot.market.base,
+                            )
+
             except InsufficientFunds as e:
                 logger.info(
                     "create retrade error for {} with {}".format(order.__str__(), e)
