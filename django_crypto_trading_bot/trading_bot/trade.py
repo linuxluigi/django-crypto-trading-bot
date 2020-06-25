@@ -16,7 +16,7 @@ from django_crypto_trading_bot.trading_bot.models import (
 
 logger = logging.getLogger(__name__)
 
-def run_trade(candle: Optional[OHLCV], test: bool = False):
+def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
     order: Order
     for order in Order.objects.filter(next_order=None, status=Order.Status.CLOSED):
         if not candle:
