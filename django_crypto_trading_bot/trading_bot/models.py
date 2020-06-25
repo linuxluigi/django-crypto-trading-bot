@@ -17,6 +17,7 @@ from django.utils import timezone
 from django_crypto_trading_bot.users.models import User
 
 from .api.client import get_client
+from .exceptions import PriceToHigh, PriceToLow
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -127,7 +128,12 @@ class Market(models.Model):
             amount = Decimal(0)
         if amount > self.limits_amount_max:
             amount = self.limits_amount_max
-        return amount
+
+        # if self.precision_amount:
+        print(self.precision_amount)
+        getcontext().prec = 20
+        return amount.quantize(Decimal(".1") ** self.precision_amount)
+        # return Decimal(int(amount))
 
     def __str__(self) -> str:
         return self.symbol
@@ -235,31 +241,38 @@ class Order(models.Model):
         Returns:
             Decimal -- [description]
         """
+        # todo logic error?
         if self.fee_cost and self.bot.market.quote == self.fee_currency:
             return self.cost() - self.fee_cost
 
         return self.cost()
 
-    def get_retrade_amount(self) -> Decimal:
+    def get_retrade_amount(self, price: Decimal) -> Decimal:
         """
         get retrade amount
 
         Returns:
             Decimal -- retrade amount
         """
-        if self.bot.market.precision_amount > 0:
-            getcontext().prec = self.bot.market.precision_amount
+        if price < self.bot.market.limits_price_min:
+            raise PriceToLow()
+        if price > self.bot.market.limits_price_max:
+            raise PriceToHigh()
+
         getcontext().rounding = ROUND_DOWN
 
-        amount: Decimal = self.amount
+        amount: Decimal = Decimal(self.amount)
         if self.fee_cost:
             amount -= self.fee_cost
+
+        if self.side == Order.Side.SIDE_SELL:
+            quote_amount: Decimal = amount * self.price
+            amount = quote_amount / price
+
         amount -= amount % self.bot.market.limits_amount_min
 
-        if self.bot.market.precision_amount == 0:
-            return Decimal(int(self.bot.market.get_min_max_order_amount(amount=amount)))
-
         return self.bot.market.get_min_max_order_amount(amount=amount)
+
 
     def __str__(self):
         return "{0}: {1}".format(self.pk, self.order_id)
