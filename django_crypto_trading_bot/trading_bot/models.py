@@ -343,6 +343,7 @@ class Trade(models.Model):
 class OrderErrorLog(models.Model):
     class ErrorTypes(models.TextChoices):
         Insufficient_Funds = "Insufficient Funds"
+        InvalidOrder = "Invalid Order"
 
     order = models.ForeignKey(Order, related_name="error_log", on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)

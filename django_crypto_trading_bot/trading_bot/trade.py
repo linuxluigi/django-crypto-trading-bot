@@ -2,7 +2,7 @@ import logging
 from decimal import ROUND_DOWN, Decimal, getcontext
 from typing import List, Optional
 
-from ccxt.base.errors import InsufficientFunds
+from ccxt.base.errors import InsufficientFunds, InvalidOrder
 from ccxt.base.exchange import Exchange
 
 from django_crypto_trading_bot.trading_bot.api.order import create_order
@@ -112,6 +112,16 @@ def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
                 OrderErrorLog.objects.create(
                     order=order,
                     error_type=OrderErrorLog.ErrorTypes.Insufficient_Funds,
+                    error_message=e,
+                )
+                continue
+            except InvalidOrder as e:
+                logger.info(
+                    "create retrade error for {} with {}".format(order.__str__(), e)
+                )
+                OrderErrorLog.objects.create(
+                    order=order,
+                    error_type=OrderErrorLog.ErrorTypes.InvalidOrder,
                     error_message=e,
                 )
                 continue
