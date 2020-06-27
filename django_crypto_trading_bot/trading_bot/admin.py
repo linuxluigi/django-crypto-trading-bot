@@ -91,7 +91,9 @@ class BotAdmin(admin.ModelAdmin):
         "created",
         "start_amount",
         "current_amount",
+        "estimate_current_amount",
         "roi",
+        "estimate_roi",
         "orders_count",
     )
 
@@ -100,7 +102,16 @@ class BotAdmin(admin.ModelAdmin):
         ("Settings", {"fields": ["timeframe"]}),
         (
             "Stats",
-            {"fields": ["start_amount", "current_amount", "roi", "orders_count"]},
+            {
+                "fields": [
+                    "start_amount",
+                    "current_amount",
+                    "estimate_current_amount",
+                    "roi",
+                    "estimate_roi",
+                    "orders_count",
+                ]
+            },
         ),
     ]
 

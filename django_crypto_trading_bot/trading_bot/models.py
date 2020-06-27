@@ -321,12 +321,35 @@ class Bot(models.Model):
         return None
 
     @property
+    def estimate_current_amount(self) -> Optional[Decimal]:
+        orders: models.Manager[Order] = Order.objects.filter(bot=self).order_by(
+            "-timestamp"
+        )[:1]
+        if len(orders):
+            return orders[0].amount
+        return None
+
+    @property
     def roi(self) -> Optional[Decimal]:
         start_amount: Optional[Decimal] = self.start_amount
         if not start_amount:
             return None
 
         current_amount: Optional[Decimal] = self.current_amount
+        if not current_amount:
+            return None
+
+        getcontext().prec = 2
+        win: Decimal = current_amount - start_amount
+        return win / current_amount * Decimal(100)
+
+    @property
+    def estimate_roi(self) -> Optional[Decimal]:
+        start_amount: Optional[Decimal] = self.start_amount
+        if not start_amount:
+            return None
+
+        current_amount: Optional[Decimal] = self.estimate_current_amount
         if not current_amount:
             return None
 

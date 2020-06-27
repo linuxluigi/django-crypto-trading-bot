@@ -107,7 +107,7 @@ class TestBot(unittest.TestCase):
         bot: Bot = BotFactory()
 
         # test without orders
-        assert bot.start_amount is None
+        assert bot.current_amount is None
 
         # test with single order
         order_1: Order = BuyOrderFactory()
@@ -124,6 +124,44 @@ class TestBot(unittest.TestCase):
         order_2.save()
         assert bot.current_amount is not None
         assert "{:.3f}".format(bot.current_amount) == "{:.3f}".format(order_2.amount)
+
+        order_2.status = Order.Status.OPEN
+        order_2.save()
+        assert bot.current_amount is not None
+        assert "{:.3f}".format(bot.current_amount) == "{:.3f}".format(order_1.amount)
+
+    def test_estimate_current_amount(self):
+        bot: Bot = BotFactory()
+
+        # test without orders
+        assert bot.estimate_current_amount is None
+
+        # test with single order
+        order_1: Order = BuyOrderFactory()
+        order_1.bot = bot
+        order_1.save()
+        assert bot.estimate_current_amount is not None
+        assert "{:.3f}".format(bot.estimate_current_amount) == "{:.3f}".format(
+            order_1.amount
+        )
+
+        # test with 2 orders
+        order_2: Order = SellOrderFactory()
+        order_2.bot = bot
+        order_2.amount = order_1.amount * 2
+        order_2.timestamp = order_1.timestamp + timedelta(100)
+        order_2.save()
+        assert bot.estimate_current_amount is not None
+        assert "{:.3f}".format(bot.estimate_current_amount) == "{:.3f}".format(
+            order_2.amount
+        )
+
+        order_2.status = Order.Status.OPEN
+        order_2.save()
+        assert bot.estimate_current_amount is not None
+        assert "{:.3f}".format(bot.estimate_current_amount) == "{:.3f}".format(
+            order_2.amount
+        )
 
     def test_roi(self):
         bot: Bot = BotFactory()
@@ -146,6 +184,38 @@ class TestBot(unittest.TestCase):
         order_2.save()
         assert bot.roi is not None
         assert "{:.2f}".format(bot.roi) == "50.00"
+
+        order_2.status = Order.Status.OPEN
+        order_2.save()
+        assert bot.roi is not None
+        assert "{:.2f}".format(bot.roi) == "0.00"
+
+    def test_estimate_roi(self):
+        bot: Bot = BotFactory()
+
+        # test without orders
+        assert bot.estimate_roi is None
+
+        # test with single order
+        order_1: Order = BuyOrderFactory()
+        order_1.bot = bot
+        order_1.save()
+        assert bot.estimate_roi is not None
+        assert "{:.2f}".format(bot.estimate_roi) == "0.00"
+
+        # test with 2 orders
+        order_2: Order = SellOrderFactory()
+        order_2.bot = bot
+        order_2.amount = order_1.amount * 2
+        order_2.timestamp = order_1.timestamp + timedelta(100)
+        order_2.save()
+        assert bot.estimate_roi is not None
+        assert "{:.2f}".format(bot.estimate_roi) == "50.00"
+
+        order_2.status = Order.Status.OPEN
+        order_2.save()
+        assert bot.estimate_roi is not None
+        assert "{:.2f}".format(bot.estimate_roi) == "50.00"
 
     def test_orders_count(self):
         bot: Bot = BotFactory()
