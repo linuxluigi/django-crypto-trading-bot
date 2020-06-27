@@ -122,6 +122,7 @@ class BotAdmin(admin.ModelAdmin):
         "timeframe",
         "active",
         "roi",
+        "estimate_roi",
         "orders_count",
     )
     list_filter = ["account", "timeframe", "active"]
