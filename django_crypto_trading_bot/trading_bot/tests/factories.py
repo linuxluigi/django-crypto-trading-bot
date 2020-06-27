@@ -123,19 +123,23 @@ class SellOrderFactory(BuyOrderFactory):
     order_id = "2"
     side = Order.Side.SIDE_SELL
 
+
 class OpenBuyOrderFactory(BuyOrderFactory):
     order_id = "3"
     status = Order.Status.OPEN
 
+
 class EndOrderFactory(BuyOrderFactory):
     order_id = "4"
     status = Order.Status.NOT_MIN_NOTIONAL
+
 
 class BuyFeeOrderFactory(BuyOrderFactory):
     order_id = "5"
     fee_currency = SubFactory(BnbCurrencyFactory)
     fee_cost = Decimal(0.1)
     fee_rate = Decimal(0.01)
+
 
 class TradeFactory(DjangoModelFactory):
     class Meta:

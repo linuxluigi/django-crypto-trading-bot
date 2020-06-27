@@ -56,6 +56,9 @@ class Account(models.Model):
     api_key = models.CharField(max_length=250)
     secret = models.CharField(max_length=250)
     password = models.CharField(max_length=250, blank=True, null=True)
+    default_fee_rate = models.DecimalField(
+        max_digits=30, decimal_places=4, default=Decimal(0.01)
+    )
 
     def get_account_client(self) -> Exchange:
         return get_client(
@@ -139,27 +142,6 @@ class Market(models.Model):
         return self.symbol
 
 
-class Bot(models.Model):
-    """
-    Trading Bot
-    """
-
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)  # API Account
-    market = models.ForeignKey(
-        Market, on_delete=models.PROTECT
-    )  # Cryptomarket like TRX/BNB
-    created = models.DateTimeField(auto_now_add=True)
-    timeframe = models.CharField(
-        max_length=10, choices=Timeframes.choices, default=Timeframes.MONTH_1
-    )
-    active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return "{0}: {1} - {2}".format(
-            self.pk, self.account.user.get_username(), self.market
-        )
-
-
 class Order(models.Model):
     """
     Order based on https://github.com/ccxt/ccxt/wiki/Manual#order-structure
@@ -184,7 +166,7 @@ class Order(models.Model):
         SIDE_BUY = "buy"
         SIDE_SELL = "sell"
 
-    bot = models.ForeignKey(Bot, on_delete=models.CASCADE)
+    bot = models.ForeignKey("trading_bot.Bot", on_delete=models.CASCADE)
     order_id = models.CharField(max_length=255, unique=True)
     timestamp = models.DateTimeField()
     status = models.CharField(
@@ -262,8 +244,16 @@ class Order(models.Model):
         getcontext().rounding = ROUND_DOWN
 
         amount: Decimal = Decimal(self.amount)
-        if self.fee_cost:
-            amount -= self.fee_cost
+
+        fee_rate: Decimal
+        if self.fee_rate:
+            fee_rate = self.fee_rate
+        else:
+            fee_rate = self.bot.account.default_fee_rate
+
+        fee_cost: Decimal = amount * fee_rate / Decimal(100)
+
+        amount -= fee_cost
 
         if self.side == Order.Side.SIDE_SELL:
             quote_amount: Decimal = amount * self.price
@@ -273,9 +263,65 @@ class Order(models.Model):
 
         return self.bot.market.get_min_max_order_amount(amount=amount)
 
-
     def __str__(self):
         return "{0}: {1}".format(self.pk, self.order_id)
+
+
+class Bot(models.Model):
+    """
+    Trading Bot
+    """
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)  # API Account
+    market = models.ForeignKey(
+        Market, on_delete=models.PROTECT
+    )  # Cryptomarket like TRX/BNB
+    created = models.DateTimeField(auto_now_add=True)
+    timeframe = models.CharField(
+        max_length=10, choices=Timeframes.choices, default=Timeframes.MONTH_1
+    )
+    active = models.BooleanField(default=True)
+
+    @property
+    def start_amount(self) -> Optional[Decimal]:
+        orders: models.Manager[Order] = Order.objects.filter(bot=self).order_by(
+            "timestamp"
+        )[:1]
+        if len(orders):
+            return orders[0].amount
+        return None
+
+    @property
+    def current_amount(self) -> Optional[Decimal]:
+        orders: models.Manager[Order] = Order.objects.filter(bot=self).order_by(
+            "-timestamp"
+        )[:1]
+        if len(orders):
+            return orders[0].amount
+        return None
+
+    @property
+    def roi(self) -> Optional[Decimal]:
+        start_amount: Optional[Decimal] = self.start_amount
+        if not start_amount:
+            return None
+
+        current_amount: Optional[Decimal] = self.current_amount
+        if not current_amount:
+            return None
+
+        getcontext().prec = 2
+        win: Decimal = current_amount - start_amount
+        return win / current_amount * Decimal(100)
+
+    @property
+    def orders_count(self) -> int:
+        return Order.objects.filter(bot=self).count()
+
+    def __str__(self):
+        return "{0}: {1} - {2}".format(
+            self.pk, self.account.user.get_username(), self.market
+        )
 
 
 class Saving(models.Model):

@@ -24,7 +24,7 @@ def order_structure(add_trades: bool) -> dict:
 
     add_trades -> add a trade to order
     """
-    order_structure: dict = {
+    order: dict = {
         "id": "12345-67890:09876/54321",
         "datetime": "2017-08-17 12:42:48.000",
         "timestamp": 1502962946216,
@@ -39,13 +39,13 @@ def order_structure(add_trades: bool) -> dict:
         "remaining": 0.4,
         "cost": 0.076094524,
         "trades": [],
-        "fee": {"currency": "BTC", "cost": 0.0009, "rate": 0.002},
+        "fee": {"currency": "BTC", "cost": 0.0008, "rate": 0.002},
     }
 
     if add_trades:
-        order_structure["trades"] = [trade_structure()]
+        order["trades"] = [trade_structure()]
 
-    return order_structure
+    return order
 
 
 def market_structure() -> dict:

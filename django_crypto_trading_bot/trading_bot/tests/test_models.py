@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, getcontext
 from typing import List, Optional
 
@@ -12,6 +12,7 @@ from django_crypto_trading_bot.trading_bot.exceptions import PriceToHigh, PriceT
 from django_crypto_trading_bot.trading_bot.models import (
     OHLCV,
     Account,
+    Bot,
     Exchanges,
     Market,
     Order,
@@ -20,6 +21,7 @@ from django_crypto_trading_bot.trading_bot.models import (
 
 from .factories import (
     AccountFactory,
+    BotFactory,
     BuyOrderFactory,
     MarketFactory,
     SellOrderFactory,
@@ -29,8 +31,7 @@ from .factories import (
 
 
 @pytest.mark.django_db()
-class Account(unittest.TestCase):
-
+class TestAccount(unittest.TestCase):
     def test_get_account_client(self):
         account: Account = AccountFactory()
         client: Exchange = account.get_account_client()
@@ -38,9 +39,9 @@ class Account(unittest.TestCase):
         balance: dict = client.fetch_balance()
         assert isinstance(balance, dict)
 
-@pytest.mark.django_db()
-class Market(unittest.TestCase):
 
+@pytest.mark.django_db()
+class TestMarket(unittest.TestCase):
     def test_symbol(self):
         # check if symbol create the right symbol
         market: Market = MarketFactory()
@@ -59,18 +60,147 @@ class Market(unittest.TestCase):
         getcontext().prec = market.precision_amount
 
         # test minimum
-        assert "{:.3f}".format(market.get_min_max_order_amount(market.limits_amount_min / 2)) == "{:.3f}".format(0)
+        assert "{:.3f}".format(
+            market.get_min_max_order_amount(market.limits_amount_min / 2)
+        ) == "{:.3f}".format(0)
         # test maximum
-        assert "{:.3f}".format(market.get_min_max_order_amount(market.limits_amount_max * 2)) == "{:.3f}".format(market.limits_amount_max)
+        assert "{:.3f}".format(
+            market.get_min_max_order_amount(market.limits_amount_max * 2)
+        ) == "{:.3f}".format(market.limits_amount_max)
         # test valid amount
-        assert "{:.3f}".format(market.get_min_max_order_amount(Decimal(10.3))) == "{:.3f}".format(10.3)
+        assert "{:.3f}".format(
+            market.get_min_max_order_amount(Decimal(10.3))
+        ) == "{:.3f}".format(10.3)
         # test precision_amount 0
         market.precision_amount = 0
-        assert "{:.3f}".format(market.get_min_max_order_amount(Decimal(10.321))) == "{:.3f}".format(10)
+        assert "{:.3f}".format(
+            market.get_min_max_order_amount(Decimal(10.321))
+        ) == "{:.3f}".format(10)
+
 
 @pytest.mark.django_db()
-class OHLCV(unittest.TestCase):
+class TestBot(unittest.TestCase):
+    def test_start_amount(self):
+        bot: Bot = BotFactory()
 
+        # test without orders
+        assert bot.start_amount is None
+
+        # test with single order
+        order_1: Order = BuyOrderFactory()
+        order_1.bot = bot
+        order_1.save()
+        assert bot.start_amount is not None
+        assert "{:.3f}".format(bot.start_amount) == "{:.3f}".format(order_1.amount)
+
+        # test with 2 orders
+        order_2: Order = SellOrderFactory()
+        order_2.bot = bot
+        order_2.amount = order_1.amount * 2
+        order_2.timestamp = order_1.timestamp + timedelta(100)
+        order_2.save()
+        assert bot.start_amount is not None
+        assert "{:.3f}".format(bot.start_amount) == "{:.3f}".format(order_1.amount)
+
+    def test_current_amount(self):
+        bot: Bot = BotFactory()
+
+        # test without orders
+        assert bot.start_amount is None
+
+        # test with single order
+        order_1: Order = BuyOrderFactory()
+        order_1.bot = bot
+        order_1.save()
+        assert bot.current_amount is not None
+        assert "{:.3f}".format(bot.current_amount) == "{:.3f}".format(order_1.amount)
+
+        # test with 2 orders
+        order_2: Order = SellOrderFactory()
+        order_2.bot = bot
+        order_2.amount = order_1.amount * 2
+        order_2.timestamp = order_1.timestamp + timedelta(100)
+        order_2.save()
+        assert bot.current_amount is not None
+        assert "{:.3f}".format(bot.current_amount) == "{:.3f}".format(order_2.amount)
+
+    def test_roi(self):
+        bot: Bot = BotFactory()
+
+        # test without orders
+        assert bot.roi is None
+
+        # test with single order
+        order_1: Order = BuyOrderFactory()
+        order_1.bot = bot
+        order_1.save()
+        assert bot.roi is not None
+        assert "{:.2f}".format(bot.roi) == "0.00"
+
+        # test with 2 orders
+        order_2: Order = SellOrderFactory()
+        order_2.bot = bot
+        order_2.amount = order_1.amount * 2
+        order_2.timestamp = order_1.timestamp + timedelta(100)
+        order_2.save()
+        assert bot.roi is not None
+        assert "{:.2f}".format(bot.roi) == "50.00"
+
+    def test_orders_count(self):
+        bot: Bot = BotFactory()
+
+        # test without orders
+        assert bot.orders_count == 0
+
+        # test with a single order
+        order_1: Order = BuyOrderFactory()
+        order_1.bot = bot
+        order_1.save()
+        assert bot.orders_count == 1
+
+
+@pytest.mark.django_db()
+class TestOrder(unittest.TestCase):
+    def test_get_retrade_amount(self):
+        buy_order: Order = BuyOrderFactory()
+        sell_order: Order = SellOrderFactory()
+
+        getcontext().prec = buy_order.bot.market.precision_amount
+
+        assert (
+            "{:.3f}".format(
+                buy_order.get_retrade_amount(price=buy_order.price + Decimal(1))
+            )
+            == "99.800"
+        )
+        assert (
+            "{:.3f}".format(
+                sell_order.get_retrade_amount(price=sell_order.price - Decimal(1))
+            )
+            == "111.100"
+        )
+
+        # add fee rate in bot
+        buy_order.fee_rate = 10
+        assert (
+            "{:.3f}".format(
+                buy_order.get_retrade_amount(price=buy_order.price + Decimal(1))
+            )
+            == "89.900"
+        )
+
+    def test_get_retrade_amount_error(self):
+        order: Order = BuyOrderFactory()
+        with pytest.raises(PriceToLow):
+            order.get_retrade_amount(price=Decimal(0))
+        with pytest.raises(PriceToHigh):
+            order.get_retrade_amount(
+                price=order.bot.market.limits_price_max + Decimal(10)
+            )
+
+
+@pytest.mark.django_db()
+class TestOHLCV(unittest.TestCase):
     def test_get_OHLCV(self):
 
         market: Market = MarketFactory()
@@ -99,7 +229,6 @@ class OHLCV(unittest.TestCase):
         assert ohlcv.lowest_price == Decimal(test_candel[3])
         assert ohlcv.closing_price == Decimal(test_candel[4])
         assert ohlcv.volume == Decimal(test_candel[5])
-
 
     def test_create_OHLCV(self):
         market: Market = MarketFactory()
@@ -130,7 +259,6 @@ class OHLCV(unittest.TestCase):
         assert ohlcv.closing_price == Decimal(test_candel[4])
         assert ohlcv.volume == Decimal(test_candel[5])
 
-
     def test_last_candle(self):
         market: Market = MarketFactory()
         timeframe: Timeframes = Timeframes.MINUTE_1
@@ -139,7 +267,9 @@ class OHLCV(unittest.TestCase):
         assert OHLCV.last_candle(timeframe=timeframe, market=market) is None
 
         # test with 1 candles
-        OHLCV.create_OHLCV(candle=[0, 0, 0, 0, 0, 0], timeframe=timeframe, market=market)
+        OHLCV.create_OHLCV(
+            candle=[0, 0, 0, 0, 0, 0], timeframe=timeframe, market=market
+        )
         last_candle_1: Optional[OHLCV] = OHLCV.last_candle(
             timeframe=timeframe, market=market
         )
@@ -160,14 +290,14 @@ class OHLCV(unittest.TestCase):
             year=2017, month=9, day=4, hour=16, minute=13, tzinfo=pytz.UTC
         )
 
-
     def test_update_new_candles(self):
         market: Market = MarketFactory()
 
         # update market with timeframe of 1 month
         OHLCV.update_new_candles(timeframe=Timeframes.MONTH_1, market=MarketFactory())
         assert (
-            OHLCV.objects.filter(timeframe=Timeframes.MONTH_1, market=market).count() > 20
+            OHLCV.objects.filter(timeframe=Timeframes.MONTH_1, market=market).count()
+            > 20
         )
 
         # update 550 candles
@@ -185,7 +315,6 @@ class OHLCV(unittest.TestCase):
         assert candles_amount >= 550
         assert candles_amount <= 553
 
-
     # def test_update_new_candles_all_markets(self):
     #     market: Market = MarketFactory()
 
@@ -195,22 +324,3 @@ class OHLCV(unittest.TestCase):
     #         OHLCV.objects.filter(timeframe=Timeframes.MONTH_1, market=market).count()
     #         > 20
     #     )
-
-
-@pytest.mark.django_db()
-class Order(unittest.TestCase):
-    def test_get_retrade_amount(self):
-        buy_order: Order = BuyOrderFactory()
-        sell_order: Order = SellOrderFactory()
-
-        getcontext().prec = buy_order.bot.market.precision_amount
-
-        assert "{:.3f}".format(buy_order.get_retrade_amount(price=buy_order.price + Decimal(1))) == "{:.3f}".format(99.9)
-        assert "{:.3f}".format(sell_order.get_retrade_amount(price=sell_order.price - Decimal(1))) == "{:.3f}".format(111.1)
-
-    def test_get_retrade_amount_error(self):
-        order: Order = BuyOrderFactory()
-        with pytest.raises(PriceToLow):
-            order.get_retrade_amount(price=Decimal(0))
-        with pytest.raises(PriceToHigh):
-            order.get_retrade_amount(price=order.bot.market.limits_price_max +  Decimal(10))

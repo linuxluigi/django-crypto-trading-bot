@@ -21,7 +21,6 @@ from django_crypto_trading_bot.trading_bot.trade import run_trade
 
 @pytest.mark.django_db()
 class Trade(unittest.TestCase):
-
     def test_no_update(self):
         open_order: Order = OpenBuyOrderFactory()
         end_order: Order = EndOrderFactory()
@@ -60,6 +59,6 @@ class Trade(unittest.TestCase):
         assert buy_order_reload.next_order != None
         assert sell_order_reload.next_order != None
 
-        sell_saving: Saving = Saving.objects.get(order=sell_order)
+        Saving.objects.get(order=sell_order)
 
-        assert Saving.objects.all().count() == 1
+        assert Saving.objects.all().count() == 2

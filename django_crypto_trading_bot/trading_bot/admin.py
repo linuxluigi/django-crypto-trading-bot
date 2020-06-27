@@ -87,12 +87,22 @@ class MarketAdmin(admin.ModelAdmin):
 
 
 class BotAdmin(admin.ModelAdmin):
+    readonly_fields = (
+        "created",
+        "start_amount",
+        "current_amount",
+        "roi",
+        "orders_count",
+    )
+
     fieldsets = [
         ("Base", {"fields": ["account", "market", "active"]}),
         ("Settings", {"fields": ["timeframe"]}),
+        (
+            "Stats",
+            {"fields": ["start_amount", "current_amount", "roi", "orders_count"]},
+        ),
     ]
-
-    readonly_fields = ("created",)
 
     list_display = ("account", "market", "created", "timeframe", "active")
     list_filter = ["account", "timeframe", "active"]
