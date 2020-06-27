@@ -313,9 +313,9 @@ class Bot(models.Model):
 
     @property
     def current_amount(self) -> Optional[Decimal]:
-        orders: models.Manager[Order] = Order.objects.filter(bot=self).order_by(
-            "-timestamp"
-        )[:1]
+        orders: models.Manager[Order] = Order.objects.filter(
+            bot=self, status=Order.Status.CLOSED
+        ).order_by("-timestamp")[:1]
         if len(orders):
             return orders[0].amount
         return None

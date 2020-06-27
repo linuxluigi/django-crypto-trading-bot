@@ -104,7 +104,15 @@ class BotAdmin(admin.ModelAdmin):
         ),
     ]
 
-    list_display = ("account", "market", "created", "timeframe", "active")
+    list_display = (
+        "account",
+        "market",
+        "created",
+        "timeframe",
+        "active",
+        "roi",
+        "orders_count",
+    )
     list_filter = ["account", "timeframe", "active"]
     search_fields = ["account", "market", "created"]
 
