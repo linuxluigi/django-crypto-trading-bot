@@ -142,6 +142,22 @@ class Market(models.Model):
         return self.symbol
 
 
+class OrderErrorLog(models.Model):
+    class ErrorTypes(models.TextChoices):
+        Insufficient_Funds = "Insufficient Funds"
+        InvalidOrder = "Invalid Order"
+
+    order = models.ForeignKey(
+        "trading_bot.Order", related_name="error_log", on_delete=models.CASCADE
+    )
+    created = models.DateTimeField(auto_now_add=True)
+    error_type = models.CharField(max_length=50, choices=ErrorTypes.choices)
+    error_message = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return "{0}: {1}".format(self.created, self.error_type)
+
+
 class Order(models.Model):
     """
     Order based on https://github.com/ccxt/ccxt/wiki/Manual#order-structure
@@ -262,6 +278,10 @@ class Order(models.Model):
         amount -= amount % self.bot.market.limits_amount_min
 
         return self.bot.market.get_min_max_order_amount(amount=amount)
+
+    @property
+    def errors(self) -> int:
+        return OrderErrorLog.objects.filter(order=self).count()
 
     def __str__(self):
         return "{0}: {1}".format(self.pk, self.order_id)
@@ -384,20 +404,6 @@ class Trade(models.Model):
         price -= price % self.order.bot.market.limits_price_min
 
         return self.order.bot.market.get_min_max_price(price=price)
-
-
-class OrderErrorLog(models.Model):
-    class ErrorTypes(models.TextChoices):
-        Insufficient_Funds = "Insufficient Funds"
-        InvalidOrder = "Invalid Order"
-
-    order = models.ForeignKey(Order, related_name="error_log", on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True)
-    error_type = models.CharField(max_length=50, choices=ErrorTypes.choices)
-    error_message = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return "{0}: {1}".format(self.created, self.error_type)
 
 
 class OHLCV(models.Model):

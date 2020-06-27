@@ -112,8 +112,10 @@ class BotAdmin(admin.ModelAdmin):
 
 
 class OrderAdmin(admin.ModelAdmin):
+    readonly_fields = ("errors",)
+
     fieldsets = [
-        ("Base", {"fields": ["bot"]}),
+        ("Base", {"fields": ["bot", "errors"]}),
         (
             "Order",
             {
@@ -141,6 +143,7 @@ class OrderAdmin(admin.ModelAdmin):
         "status",
         "side",
         "price",
+        "errors",
     )
     list_filter = ["bot", "timestamp", "status", "side"]
     search_fields = [

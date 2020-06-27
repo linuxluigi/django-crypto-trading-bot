@@ -16,6 +16,7 @@ from django_crypto_trading_bot.trading_bot.models import (
     Exchanges,
     Market,
     Order,
+    OrderErrorLog,
     Timeframes,
 )
 
@@ -197,6 +198,18 @@ class TestOrder(unittest.TestCase):
             order.get_retrade_amount(
                 price=order.bot.market.limits_price_max + Decimal(10)
             )
+
+    def test_errors(self):
+        order: Order = BuyOrderFactory()
+
+        # test with no errors
+        assert order.errors == 0
+
+        # test with single error
+        OrderErrorLog.objects.create(
+            order=order, error_type=OrderErrorLog.ErrorTypes.Insufficient_Funds
+        )
+        assert order.errors == 1
 
 
 @pytest.mark.django_db()
