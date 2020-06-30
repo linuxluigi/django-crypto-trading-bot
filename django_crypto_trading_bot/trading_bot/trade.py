@@ -1,8 +1,14 @@
 import logging
 from decimal import ROUND_DOWN, Decimal, getcontext
+from time import sleep
 from typing import List, Optional
 
-from ccxt.base.errors import InsufficientFunds, InvalidOrder
+from ccxt.base.errors import (
+    ExchangeNotAvailable,
+    InsufficientFunds,
+    InvalidOrder,
+    RequestTimeout,
+)
 from ccxt.base.exchange import Exchange
 
 from django_crypto_trading_bot.trading_bot.api.order import create_order
@@ -23,9 +29,17 @@ def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
         if not candle:
             exchange: Exchange = order.bot.account.get_account_client()
 
-            candles: List[List[float]] = exchange.fetch_ohlcv(
-                symbol=order.bot.market.symbol, timeframe=order.bot.timeframe, limit=1,
-            )
+            candles: List[List[float]]
+            while True:
+                try:
+                    candles = exchange.fetch_ohlcv(
+                        symbol=order.bot.market.symbol,
+                        timeframe=order.bot.timeframe,
+                        limit=1,
+                    )
+                    break
+                except (RequestTimeout, ExchangeNotAvailable):
+                    sleep(30)
 
             candle = OHLCV.get_OHLCV(
                 candle=candles[0],
@@ -70,13 +84,18 @@ def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
                 try:
                     if order.side == Order.Side.SIDE_BUY:
 
-                        order.next_order = create_order(
-                            amount=retrade_amount,
-                            price=candle.highest_price,
-                            side=Order.Side.SIDE_SELL,
-                            bot=order.bot,
-                            isTestOrder=test,
-                        )
+                        while True:
+                            try:
+                                order.next_order = create_order(
+                                    amount=retrade_amount,
+                                    price=candle.highest_price,
+                                    side=Order.Side.SIDE_SELL,
+                                    bot=order.bot,
+                                    isTestOrder=test,
+                                )
+                                break
+                            except (RequestTimeout, ExchangeNotAvailable):
+                                sleep(30)
 
                         saving_amount = (order.amount - retrade_amount) * order.price
 
@@ -87,15 +106,19 @@ def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
                                 amount=saving_amount,
                                 currency=order.bot.market.quote,
                             )
-
                     else:
-                        order.next_order = create_order(
-                            amount=retrade_amount,
-                            price=candle.lowest_price,
-                            side=Order.Side.SIDE_BUY,
-                            bot=order.bot,
-                            isTestOrder=test,
-                        )
+                        while True:
+                            try:
+                                order.next_order = create_order(
+                                    amount=retrade_amount,
+                                    price=candle.lowest_price,
+                                    side=Order.Side.SIDE_BUY,
+                                    bot=order.bot,
+                                    isTestOrder=test,
+                                )
+                                break
+                            except (RequestTimeout, ExchangeNotAvailable):
+                                sleep(30)
 
                         saving_amount = order.amount - retrade_amount
 
