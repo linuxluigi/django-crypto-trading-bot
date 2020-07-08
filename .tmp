@@ -1,0 +1,92 @@
+# git push heroku master
+# heroku run python manage.py trade
+
+# BAND_BNB 66.3
+# heroku run python manage.py init_trade --amount 3.9 --bot_id 11
+# ANKR_BNB 28016
+# heroku run python manage.py init_trade --amount 1648 --bot_id 12
+# CTSI_BNB 2229
+# heroku run python manage.py init_trade --amount 131 --bot_id 13
+# SC_BNB 25293
+# heroku run python manage.py init_trade --amount 1487 --bot_id 14
+# ZEC_BNB 1.515
+# heroku run python manage.py init_trade --amount 0.089 --bot_id 15
+# ENJ_BNB 471
+# heroku run python manage.py init_trade --amount 27 --bot_id 16
+# BAT_BNB 339.6
+# heroku run python manage.py init_trade --amount 19.9 --bot_id 17
+# MATIC_BNB 3899
+# heroku run python manage.py init_trade --amount 229 --bot_id 18
+# THETA_BNB 354
+# heroku run python manage.py init_trade --amount 20 --bot_id 19
+# OGN_BNB 270.8
+# heroku run python manage.py init_trade --amount 15.9 --bot_id 20
+# ONE_BNB 17497
+# heroku run python manage.py init_trade --amount 1029 --bot_id 21
+# ATOM_BNB 31.46
+# heroku run python manage.py init_trade --amount 1.85 --bot_id 22
+# NEO_BNB 7.89
+# heroku run python manage.py init_trade --amount 0.46 --bot_id 23
+# TRX_BNB 5323
+# heroku run python manage.py init_trade --amount 313 --bot_id 24
+# STEEM_BNB 416.0
+# heroku run python manage.py init_trade --amount 24 --bot_id 25
+# TROY_BNB 22655
+# heroku run python manage.py init_trade --amount 1332 --bot_id 26
+# IOTA_BNB 381.5
+# heroku run python manage.py init_trade --amount 22.4 --bot_id 27
+# ADA_BNB 84
+# heroku run python manage.py init_trade --amount 84 --bot_id 28
+
+
+# ADA_BNB
+# heroku run python manage.py init_trade --amount 50 --bot_id 29 --sell_order
+# heroku run python manage.py init_trade --amount 562 --bot_id 30 --sell_order
+# heroku run python manage.py init_trade --amount 4 --bot_id 31 --sell_order
+# heroku run python manage.py init_trade --amount 6 --bot_id 32 --sell_order
+# heroku run python manage.py init_trade --amount 4 --bot_id 33 --sell_order
+
+# Midat
+# 34	NPXS_ETH	62000	SELL	Week
+# heroku run python manage.py init_trade --amount 62000 --bot_id 34 --sell_order
+# 35	KNC/ETH	20	SELL	Week
+# heroku run python manage.py init_trade --amount 20 --bot_id 35 --sell_order
+# 36	LEND/ETH	80	SELL	Week
+# heroku run python manage.py init_trade --amount 80 --bot_id 36 --sell_order
+# 38	ADA/BNB	120	SELL	Week
+# heroku run python manage.py init_trade --amount 120 --bot_id 38 --sell_order
+# 39	BTT/BNB	45000	SELL	Week
+# heroku run python manage.py init_trade --amount 45000 --bot_id 39 --sell_order
+# 40	HOT/BTC	30158	SELL	Week
+# heroku run python manage.py init_trade --amount 30158 --bot_id 40 --sell_order
+# 41	BNT/BTC	10	SELL	Week
+# heroku run python manage.py init_trade --amount 10 --bot_id 41 --sell_order
+# 42	WRX/BNB	83	SELL	Week
+# heroku run python manage.py init_trade --amount 84 --bot_id 42 --sell_order
+# 43	STEEM/BTC	67	SELL	Week
+# heroku run python manage.py init_trade --amount 67 --bot_id 43 --sell_order
+
+# Marcus
+# 44	NPXS/ETh	72978	Sell	w	plus 32%	02.07.20
+# heroku run python manage.py init_trade --amount 72978 --bot_id 44 --sell_order
+# 45	BNT /ETH	1,18	Sell	3d	plus16%	02.07.20
+# heroku run python manage.py init_trade --amount 1.18 --bot_id 45 --sell_order
+# 46	KNC/BTC	5	Sell	w	plus 17,5 %	02.07.20
+# heroku run python manage.py init_trade --amount 5 --bot_id 46 --sell_order
+# 47	COMP/BTC	0,045	Sell	3d	plus 12,5%	02.07.20
+# heroku run python manage.py init_trade --amount 0.045 --bot_id 47 --sell_order
+# 48	ADA/BNB	201	Sell	d	plus 11%	02.07.20
+# heroku run python manage.py init_trade --amount 201 --bot_id 48 --sell_order
+
+
+# 50	QLC/BTC	487	Buy	3d	minus 12,5%	02.07.20
+# heroku run python manage.py init_trade --amount 487 --bot_id 50
+# 51	BTG/BTC	0,97	Buy	d	minus 12,,0%	02.07.20
+# heroku run python manage.py init_trade --amount 0.97 --bot_id 51
+# 52	AION/ETC	152,09	Buy	12h	minus 2%	02.07.20
+# heroku run python manage.py init_trade --amount 152.09 --bot_id 52
+# 53	QLC/Eth	743	Buy	d	minus 11%	02.07.20
+# heroku run python manage.py init_trade --amount 743 --bot_id 53
+
+
+

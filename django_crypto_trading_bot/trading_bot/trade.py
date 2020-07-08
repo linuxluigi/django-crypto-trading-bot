@@ -1,4 +1,5 @@
 import logging
+from collections import OrderedDict
 from decimal import ROUND_DOWN, Decimal, getcontext
 from time import sleep
 from typing import List, Optional
@@ -9,11 +10,24 @@ from ccxt.base.errors import (
     InvalidOrder,
     RequestTimeout,
 )
+
+from .exceptions import (
+    NoMarket,
+    NoTimeFrame,
+    BotHasNoStopLoss,
+    OrderHasNoLastPrice,
+    BotHasNoQuoteCurrency,
+    BotHasNoMinRise,
+)
+
 from ccxt.base.exchange import Exchange
 
 from django_crypto_trading_bot.trading_bot.api.order import create_order
 from django_crypto_trading_bot.trading_bot.models import (
     OHLCV,
+    Bot,
+    Currency,
+    Market,
     Order,
     OrderErrorLog,
     Saving,
@@ -23,9 +37,19 @@ from django_crypto_trading_bot.trading_bot.models import (
 logger = logging.getLogger(__name__)
 
 
-def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
+def run_wave_rider(candle: Optional[OHLCV] = None, test: bool = False):
     order: Order
-    for order in Order.objects.filter(next_order=None, status=Order.Status.CLOSED):
+    for order in Order.objects.filter(
+        next_order=None,
+        status=Order.Status.CLOSED,
+        bot__trade_mode=Bot.TradeMode.WAVE_RIDER,
+    ):
+        # todo test add exeception
+        if not order.bot.market:
+            raise NoMarket("Bot has no market!")
+        if not order.bot.timeframe:
+            raise NoTimeFrame("Bot has no time frame!")
+
         if not candle:
             exchange: Exchange = order.bot.account.get_account_client()
 
@@ -58,7 +82,8 @@ def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
             else:
                 retrade_amount = order.get_retrade_amount(price=candle.lowest_price)
 
-            if retrade_amount < order.bot.market.limits_amount_min:
+            limits_amount_min: Decimal = order.bot.market.limits_amount_min
+            if retrade_amount < limits_amount_min:
                 if order.side == Order.Side.SIDE_BUY:
                     Saving.objects.create(
                         order=order,
@@ -91,6 +116,7 @@ def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
                                     price=candle.highest_price,
                                     side=Order.Side.SIDE_SELL,
                                     bot=order.bot,
+                                    market=order.bot.market,
                                     isTestOrder=test,
                                 )
                                 break
@@ -114,6 +140,7 @@ def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
                                     price=candle.lowest_price,
                                     side=Order.Side.SIDE_BUY,
                                     bot=order.bot,
+                                    market=order.bot.market,
                                     isTestOrder=test,
                                 )
                                 break
@@ -153,3 +180,109 @@ def run_trade(candle: Optional[OHLCV] = None, test: bool = False):
 
                 order.save()
                 logger.info("create retrade {}".format(order.__str__()))
+
+
+def run_rising_chart(test: bool = False):
+    bot: Bot
+    for bot in Bot.objects.filter(trade_mode=Bot.TradeMode.RISING_CHART, active=True):
+        tickers: OrderedDict = bot.fetch_tickers()
+
+        # todo test add exeception
+        if not bot.stop_loss:
+            raise BotHasNoStopLoss("Bot has no stop loss!")
+
+        # sell or update orders
+        order: Order
+        for order in Order.objects.filter(
+            bot=bot, side=Order.Side.SIDE_BUY, next_order=None,
+        ):
+            # todo test add exeception
+            if not order.market:
+                raise NoMarket("Order has no market!")
+            if not order.last_price_tick:
+                raise OrderHasNoLastPrice("Order has no last price tick!")
+
+            last: Decimal = Decimal(tickers[order.market.symbol]["last"])
+            change: Decimal = last - order.last_price_tick
+            percentage: Decimal = change / order.last_price_tick * 100
+
+            if percentage <= bot.stop_loss:
+                # sell coins for stop loss
+                while True:
+                    # todo add exception for low balance
+                    try:
+                        order.next_order = create_order(
+                            amount=order.amount,
+                            side=Order.Side.SIDE_SELL,
+                            bot=bot,
+                            market=order.market,
+                            isTestOrder=test,
+                        )
+                        order.save()
+                        break
+                    except (RequestTimeout, ExchangeNotAvailable):
+                        sleep(30)
+            else:
+                # update order price
+                order.last_price_tick = last
+                order.save()
+
+        ticker: dict
+        for key, ticker in tickers.items():
+            # jump to next ticker, if quote in market is not bot quote
+            quote_str: str = ticker["symbol"].split("/")[1]
+
+            # todo test add exeception
+            quote: Currency
+            if not bot.quote:
+                BotHasNoQuoteCurrency("Bot has no quote currency!")
+            else:
+                if not bot.quote.short.upper() == quote_str.upper():
+                    continue
+
+            open_order_in_market: int = Order.objects.filter(
+                bot=bot, side=Order.Side.SIDE_BUY, next_order=None
+            ).count()
+
+            # jump to next ticker, if bot is already active in market
+            if open_order_in_market > 0:
+                continue
+
+            # todo test add exeception
+            if bot.min_rise:
+                # break if ticker percentage fall below bot min_rise
+                if Decimal(ticker["percentage"]) < bot.min_rise:
+                    break
+            else:
+                raise BotHasNoMinRise("Bot has no min rise!")
+
+            base_str: str = ticker["symbol"].split("/")[0]
+            base: Currency = Currency.objects.get(short=base_str.upper())
+            market: Market = Market.objects.get(base=base, quote=bot.quote)
+
+            quote_amount: Decimal = bot.fetch_balance(test=test)
+            if bot.max_amount and quote_amount > bot.max_amount:
+                quote_amount = bot.max_amount
+
+            amount: Decimal = quote_amount / Decimal(ticker["last"])
+
+            while True:
+                try:
+                    amount = market.get_min_max_order_amount(amount=amount)
+                    if amount < market.limits_amount_min:
+                        break
+
+                    order = create_order(
+                        amount=amount,
+                        side=Order.Side.SIDE_BUY,
+                        bot=bot,
+                        market=market,
+                        isTestOrder=test,
+                    )
+                    order.market = market
+                    order.save()
+                    break
+                except (RequestTimeout, ExchangeNotAvailable):
+                    sleep(30)
+                except InsufficientFunds:
+                    amount -= market.limits_amount_min * 5

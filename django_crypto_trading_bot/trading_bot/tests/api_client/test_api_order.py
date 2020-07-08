@@ -36,10 +36,20 @@ def test_create_buy_order():
     bot = BotFactory()
 
     order: Order = create_order(
-        amount=Decimal(1), price=Decimal(0.01), side="buy", bot=bot, isTestOrder=True,
+        amount=Decimal(1),
+        price=Decimal(0.01),
+        side="buy",
+        bot=bot,
+        isTestOrder=True,
+        market=bot.market,
     )
     order2: Order = create_order(
-        amount=Decimal(1), price=Decimal(0.01), side="buy", bot=bot, isTestOrder=True,
+        amount=Decimal(1),
+        price=Decimal(0.01),
+        side="buy",
+        bot=bot,
+        isTestOrder=True,
+        market=bot.market,
     )
 
     assert isinstance(order, Order)
@@ -55,10 +65,20 @@ def test_create_sell_order():
 
     bot = BotFactory()
     order: Order = create_order(
-        amount=Decimal(1), price=Decimal(0.01), side="sell", bot=bot, isTestOrder=True,
+        amount=Decimal(1),
+        price=Decimal(0.01),
+        side="sell",
+        bot=bot,
+        isTestOrder=True,
+        market=bot.market,
     )
     order2: Order = create_order(
-        amount=Decimal(1), price=Decimal(0.01), side="sell", bot=bot, isTestOrder=True,
+        amount=Decimal(1),
+        price=Decimal(0.01),
+        side="sell",
+        bot=bot,
+        isTestOrder=True,
+        market=bot.market,
     )
 
     assert isinstance(order, Order)

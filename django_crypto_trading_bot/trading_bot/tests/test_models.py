@@ -1,4 +1,5 @@
 import unittest
+from collections import OrderedDict
 from datetime import datetime, timedelta
 from decimal import Decimal, getcontext
 from typing import List, Optional
@@ -37,8 +38,7 @@ class TestAccount(unittest.TestCase):
         account: Account = AccountFactory()
         client: Exchange = account.get_account_client()
 
-        balance: dict = client.fetch_balance()
-        assert isinstance(balance, dict)
+        assert isinstance(client, Exchange)
 
 
 @pytest.mark.django_db()
@@ -229,6 +229,19 @@ class TestBot(unittest.TestCase):
         order_1.save()
         assert bot.orders_count == 1
 
+    def test_fetch_tickers(self):
+        bot: Bot = BotFactory()
+        tickers: dict = bot.fetch_tickers()
+
+        assert isinstance(tickers, OrderedDict)
+
+        last_percentage: float = tickers[list(tickers)[0]]["percentage"]
+
+        ticker: dict
+        for key, ticker in tickers.items():
+            assert last_percentage >= ticker["percentage"]
+            last_percentage = ticker["percentage"]
+
 
 @pytest.mark.django_db()
 class TestOrder(unittest.TestCase):
@@ -236,6 +249,7 @@ class TestOrder(unittest.TestCase):
         buy_order: Order = BuyOrderFactory()
         sell_order: Order = SellOrderFactory()
 
+        assert buy_order.bot.market is not None
         getcontext().prec = buy_order.bot.market.precision_amount
 
         assert (
@@ -265,6 +279,7 @@ class TestOrder(unittest.TestCase):
         with pytest.raises(PriceToLow):
             order.get_retrade_amount(price=Decimal(0))
         with pytest.raises(PriceToHigh):
+            assert order.bot.market is not None
             order.get_retrade_amount(
                 price=order.bot.market.limits_price_max + Decimal(10)
             )

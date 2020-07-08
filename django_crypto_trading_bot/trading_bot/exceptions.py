@@ -20,3 +20,51 @@ class PriceToHigh(Exception):
     """
     Call when try use a price above maximum amount
     """
+
+
+class FunktionNotForTradeMode(Exception):
+    """
+    Funktion is not implemented for trade mode
+    """
+
+
+class NoQuoteCurrency(Exception):
+    """
+    Bot has not quote currency
+    """
+
+
+class NoMarket(Exception):
+    """
+    Bot & order has no market!
+    """
+
+
+class NoTimeFrame(Exception):
+    """
+    Bot has no Timeframe!
+    """
+
+
+class BotHasNoStopLoss(Exception):
+    """
+    Bot has no stop loss!
+    """
+
+
+class BotHasNoQuoteCurrency(Exception):
+    """
+    Bot has no quote currency!
+    """
+
+
+class BotHasNoMinRise(Exception):
+    """
+    Bot has no min rise!
+    """
+
+
+class OrderHasNoLastPrice(Exception):
+    """
+    Order has no last price tick!
+    """

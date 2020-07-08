@@ -1,23 +1,31 @@
 from __future__ import annotations
 
 import logging
+from collections import OrderedDict
 from datetime import datetime
 from decimal import ROUND_DOWN, Decimal, getcontext
 from functools import partial
 from multiprocessing.pool import ThreadPool
+from operator import getitem
 from time import sleep
 from typing import List, Optional
 
 import pytz
 from ccxt.base.errors import RequestTimeout
 from ccxt.base.exchange import Exchange
+from django.core.cache import cache
 from django.db import models
 from django.utils import timezone
 
 from django_crypto_trading_bot.users.models import User
 
 from .api.client import get_client
-from .exceptions import PriceToHigh, PriceToLow
+from .exceptions import (
+    PriceToHigh,
+    PriceToLow,
+    FunktionNotForTradeMode,
+    NoQuoteCurrency,
+)
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -132,11 +140,8 @@ class Market(models.Model):
         if amount > self.limits_amount_max:
             amount = self.limits_amount_max
 
-        # if self.precision_amount:
-        print(self.precision_amount)
         getcontext().prec = 20
         return amount.quantize(Decimal(".1") ** self.precision_amount)
-        # return Decimal(int(amount))
 
     def __str__(self) -> str:
         return self.symbol
@@ -210,6 +215,14 @@ class Order(models.Model):
         max_digits=30, decimal_places=8, blank=True, null=True
     )
 
+    # rising chart
+    last_price_tick = models.DecimalField(
+        max_digits=30, decimal_places=8, blank=True, null=True
+    )
+    market = models.ForeignKey(
+        Market, on_delete=models.PROTECT, blank=True, null=True
+    )  # Cryptomarket like TRX/BNB
+
     def remaining(self) -> Decimal:
         """
         remaining amount to fill
@@ -228,8 +241,9 @@ class Order(models.Model):
         Returns:
             Decimal -- [description]
         """
-        if self.fee_cost and self.bot.market.base == self.fee_currency:
-            return self.filled - self.fee_cost
+        if self.bot.market:
+            if self.fee_cost and self.bot.market.base == self.fee_currency:
+                return self.filled - self.fee_cost
 
         return self.filled
 
@@ -240,8 +254,13 @@ class Order(models.Model):
             Decimal -- [description]
         """
         # todo logic error?
-        if self.fee_cost and self.bot.market.quote == self.fee_currency:
-            return self.cost() - self.fee_cost
+        if self.bot.market:
+            if (
+                self.fee_cost
+                and self.bot.market
+                and self.bot.market.quote == self.fee_currency
+            ):
+                return self.cost() - self.fee_cost
 
         return self.cost()
 
@@ -252,6 +271,10 @@ class Order(models.Model):
         Returns:
             Decimal -- retrade amount
         """
+        # todo add test case
+        if not self.bot.market:
+            raise FunktionNotForTradeMode("Only availe in wave rider trade mode!")
+
         if price < self.bot.market.limits_price_min:
             raise PriceToLow()
         if price > self.bot.market.limits_price_max:
@@ -292,15 +315,42 @@ class Bot(models.Model):
     Trading Bot
     """
 
+    class TradeMode(models.TextChoices):
+        WAVE_RIDER = "wave rider"  # switch between buy & sell orders
+        RISING_CHART = "rising chart"  # buy coin with rising price
+
+    # todo add validator for each trade_mode
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)  # API Account
-    market = models.ForeignKey(
-        Market, on_delete=models.PROTECT
-    )  # Cryptomarket like TRX/BNB
-    created = models.DateTimeField(auto_now_add=True)
-    timeframe = models.CharField(
-        max_length=10, choices=Timeframes.choices, default=Timeframes.MONTH_1
+    trade_mode = models.CharField(
+        max_length=20, choices=TradeMode.choices, default=TradeMode.WAVE_RIDER
     )
+    created = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
+
+    # wave rider
+    market = models.ForeignKey(
+        Market, on_delete=models.PROTECT, blank=True, null=True
+    )  # Cryptomarket like TRX/BNB
+    timeframe = models.CharField(
+        max_length=10,
+        choices=Timeframes.choices,
+        default=Timeframes.MONTH_1,
+        blank=True,
+        null=True,
+    )
+
+    # rising chart
+    quote = models.ForeignKey(Currency, on_delete=models.PROTECT, blank=True, null=True)
+    max_amount = models.DecimalField(
+        max_digits=30, decimal_places=8, blank=True, null=True
+    )
+    min_rise = models.DecimalField(
+        max_digits=30, decimal_places=2, blank=True, null=True
+    )
+    stop_loss = models.DecimalField(
+        max_digits=30, decimal_places=2, blank=True, null=True
+    )
 
     @property
     def start_amount(self) -> Optional[Decimal]:
@@ -361,6 +411,34 @@ class Bot(models.Model):
     def orders_count(self) -> int:
         return Order.objects.filter(bot=self).count()
 
+    def fetch_balance(self, test: bool = False) -> Decimal:
+        # todo add test case
+        if not self.quote:
+            raise NoQuoteCurrency("Bot has not quote currency!")
+
+        if test:
+            return Decimal(1)
+
+        return Decimal(
+            self.account.get_account_client().fetch_balance()["free"][
+                self.quote.short.upper()
+            ]
+        )
+
+    def fetch_tickers(self) -> OrderedDict:
+        exchange: Exchange = get_client(exchange_id=self.account.exchange)
+        tickers: dict = cache.get_or_set(
+            "tickers-{}".format(self.account.exchange), exchange.fetch_tickers(), 120
+        )
+        item: dict
+        return OrderedDict(
+            sorted(
+                tickers.items(),
+                reverse=True,
+                key=lambda item: getitem(item[1], "percentage"),
+            )
+        )
+
     def __str__(self):
         return "{0}: {1} - {2}".format(
             self.pk, self.account.user.get_username(), self.market
@@ -384,9 +462,6 @@ class Trade(models.Model):
     order = models.ForeignKey(
         Order, related_name="trade_order", on_delete=models.CASCADE
     )
-    # re_order = models.ForeignKey(
-    #     Order, related_name="re_order", on_delete=models.CASCADE, blank=True, null=True
-    # )
     trade_id = models.CharField(max_length=255, unique=True)
     timestamp = models.DateTimeField()
     taker_or_maker = models.CharField(max_length=8, choices=Order.OrderType.choices)
@@ -399,34 +474,6 @@ class Trade(models.Model):
 
     def cost(self):
         return self.amount * self.order.price
-
-    def get_retrade_amount(self) -> Decimal:
-        """
-        get retrade amount
-
-        Returns:
-            Decimal -- retrade amount
-        """
-        getcontext().prec = self.order.bot.market.precision_amount
-        getcontext().rounding = ROUND_DOWN
-        amount: Decimal = self.amount - self.fee_cost
-        amount -= amount % self.order.bot.market.limits_amount_min
-        return self.order.bot.market.get_min_max_order_amount(amount=amount)
-
-    def get_retrade_price(self, price: Decimal) -> Decimal:
-        """
-        get retrade amount
-
-        Arguments:
-            price {Decimal} -- price
-
-        Returns:
-            Decimal -- retrade amount
-        """
-        getcontext().prec = self.order.bot.market.precision_price
-        price -= price % self.order.bot.market.limits_price_min
-
-        return self.order.bot.market.get_min_max_price(price=price)
 
 
 class OHLCV(models.Model):

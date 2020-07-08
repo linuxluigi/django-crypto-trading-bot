@@ -11,7 +11,6 @@ from django_crypto_trading_bot.trading_bot.models import (
     Order,
     Timeframes,
     Trade,
-    Bot,
 )
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 
@@ -111,15 +110,14 @@ class BotFactory(DjangoModelFactory):
 
     account = SubFactory(AccountFactory)
     market = SubFactory(MarketFactory)
+    quote = SubFactory(BnbCurrencyFactory)
 
 
 class RisingChartBotFactory(BotFactory):
 
-    trade_mode = Bot.TradeMode.RISING_CHART
+    account = SubFactory(AccountFactory)
+    market = SubFactory(MarketFactory)
     quote = SubFactory(BnbCurrencyFactory)
-    max_amount = Decimal(1)
-    min_rise = Decimal(5)
-    stop_loss = Decimal(2)
 
 
 class BuyOrderFactory(DjangoModelFactory):
@@ -133,9 +131,9 @@ class BuyOrderFactory(DjangoModelFactory):
     status = Order.Status.CLOSED
     order_type = Order.OrderType.LIMIT
     side = Order.Side.SIDE_BUY
-    price = Decimal(10)
-    amount = Decimal(100)
-    filled = Decimal(100)
+    price = 10
+    amount = 100
+    filled = 100
 
 
 class SellOrderFactory(BuyOrderFactory):
@@ -158,16 +156,6 @@ class BuyFeeOrderFactory(BuyOrderFactory):
     fee_currency = SubFactory(BnbCurrencyFactory)
     fee_cost = Decimal(0.1)
     fee_rate = Decimal(0.01)
-
-
-class RisingChartOrderFactory(BuyOrderFactory):
-    order_id = "6"
-    side = Order.Side.SIDE_BUY
-    order_type = Order.OrderType.MARKET
-    bot = SubFactory(RisingChartBotFactory)
-    price = Decimal(1)
-    last_price_tick = Decimal(1)
-    market = SubFactory(MarketFactory)
 
 
 class TradeFactory(DjangoModelFactory):

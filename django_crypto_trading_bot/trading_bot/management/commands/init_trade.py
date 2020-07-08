@@ -7,6 +7,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django_crypto_trading_bot.trading_bot.api.order import create_order
 from django_crypto_trading_bot.trading_bot.models import OHLCV, Bot, Order, Timeframes
 
+from ...exceptions import NoMarket, NoTimeFrame
+
 
 class Command(BaseCommand):
     help = "Start the simulation"
@@ -32,6 +34,11 @@ class Command(BaseCommand):
 
         exchange: Exchange = bot.account.get_account_client()
 
+        if not bot.market:
+            raise NoMarket("Bot has no market to trade!")
+        if not bot.timeframe:
+            raise NoTimeFrame("Bot has no time frame to trade!")
+
         candles: List[List[float]] = exchange.fetch_ohlcv(
             symbol=bot.market.symbol, timeframe=bot.timeframe, limit=1,
         )
@@ -46,6 +53,7 @@ class Command(BaseCommand):
                 amount=Decimal(options["amount"]),
                 price=candle.highest_price,
                 side=Order.Side.SIDE_SELL,
+                market=bot.market,
                 bot=bot,
             )
         else:
@@ -53,6 +61,7 @@ class Command(BaseCommand):
                 amount=Decimal(options["amount"]),
                 price=candle.lowest_price,
                 side=Order.Side.SIDE_BUY,
+                market=bot.market,
                 bot=bot,
             )
 

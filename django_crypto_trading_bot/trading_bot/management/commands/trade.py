@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 
 from django_crypto_trading_bot.trading_bot.api.order import update_all_open_orders
-from django_crypto_trading_bot.trading_bot.trade import run_trade
+from django_crypto_trading_bot.trading_bot.trade import run_rising_chart, run_wave_rider
 
 
 class Command(BaseCommand):
@@ -9,4 +9,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         update_all_open_orders()
-        run_trade()
+        run_rising_chart()
+        run_wave_rider()

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 import pytz
 from ccxt import Exchange
@@ -16,20 +17,23 @@ from django_crypto_trading_bot.trading_bot.models import (
     Trade,
 )
 
+from ..exceptions import NoMarket
+
 
 def create_order(
     amount: Decimal,
-    price: Decimal,
     side: Order.Side,
     bot: Bot,
+    market: Market,
+    price: Optional[Decimal] = None,
     isTestOrder: bool = False,
 ) -> Order:
     """
     Create an order
     :param amount: amount you want to buy
-    :param price: the price you want to spend
     :param side: sell or buy order?
     :param botId: id of the bot which has placed the order
+    :param price: the price you want to spend
     :param isTestOrder: is this a test order?
     :return: Order object
     """
@@ -37,13 +41,20 @@ def create_order(
 
     params = {"test": isTestOrder}  # test if it's valid, but don't actually place it
 
+    order_type: str = Order.OrderType.LIMIT
+    if not price:
+        order_type = Order.OrderType.MARKET
+
     if isTestOrder:
+
+        if not price:
+            price = Decimal(1)
 
         return Order.objects.create(
             bot=bot,
-            status="open",
+            status=Order.Status.OPEN,
             order_id=len(Order.objects.all()) + 1,
-            order_type="limit",
+            order_type=order_type,
             side=side,
             timestamp=timezone.now(),
             price=price,
@@ -51,11 +62,19 @@ def create_order(
             filled=Decimal(0),
         )
     else:
-        cctx_order: dict = exchange.create_order(
-            bot.market.symbol, "limit", side, amount, price, params
-        )
+        cctx_order: dict
+        if not price:
+            cctx_order = exchange.create_order(
+                market.symbol, order_type, side, amount, params
+            )
 
-        return create_order_from_api_response(cctx_order, bot)
+            return create_order_from_api_response(cctx_order, bot)
+        else:
+            cctx_order = exchange.create_order(
+                market.symbol, order_type, side, amount, price, params
+            )
+
+            return create_order_from_api_response(cctx_order, bot)
 
 
 def create_order_from_api_response(cctx_order: dict, bot: Bot) -> Order:
@@ -131,9 +150,18 @@ def get_order_from_exchange(order: Order):
     get order from api repsonse & update the order model
     """
     exchange: Exchange = order.bot.account.get_account_client()
-    cctx_order: dict = exchange.fetch_order(
-        id=order.order_id, symbol=order.bot.market.symbol
-    )
+
+    cctx_order: dict
+    if order.market:
+        cctx_order = exchange.fetch_order(id=order.order_id, symbol=order.market.symbol)
+    elif order.bot.market:
+        cctx_order = exchange.fetch_order(
+            id=order.order_id, symbol=order.bot.market.symbol
+        )
+    else:
+        # todo test exception
+        raise NoMarket("Bot & order has no market!")
+
     return update_order_from_api_response(cctx_order=cctx_order, order=order)
 
 

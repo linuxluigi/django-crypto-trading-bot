@@ -98,8 +98,12 @@ class BotAdmin(admin.ModelAdmin):
     )
 
     fieldsets = [
-        ("Base", {"fields": ["account", "market", "active"]}),
-        ("Settings", {"fields": ["timeframe"]}),
+        ("Base", {"fields": ["account", "active"]}),
+        ("Trade Mode: Wave Rider", {"fields": ["market", "timeframe"]}),
+        (
+            "Trade Mode: Rising Chart",
+            {"fields": ["quote", "max_amount", "min_rise", "stop_loss"]},
+        ),
         (
             "Stats",
             {
@@ -153,6 +157,7 @@ class OrderAdmin(admin.ModelAdmin):
             },
         ),
         ("Fee", {"fields": ["fee_currency", "fee_cost", "fee_rate"]}),
+        ("Rising Chart", {"fields": ["last_price_tick", "market"]}),
     ]
 
     list_display = (
