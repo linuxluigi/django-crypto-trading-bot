@@ -4,6 +4,9 @@ from decimal import ROUND_DOWN, Decimal, getcontext
 from time import sleep
 from typing import List, Optional
 
+from datetime import datetime, timedelta
+from django.utils import timezone
+
 from ccxt.base.errors import (
     ExchangeNotAvailable,
     InsufficientFunds,
@@ -255,6 +258,15 @@ def run_rising_chart(test: bool = False):
 
             # jump to next ticker, if bot is already active in market
             if open_order_in_market > 0:
+                continue
+
+            lock_time: datetime = timezone.now() - timedelta(hours=bot.lock_time)
+            last_order_in_market: int = Order.objects.filter(
+                bot=bot, side=Order.Side.SIDE_SELL, timestamp__gte=lock_time
+            ).count()
+
+            # jump to next ticker, if bot is in lock for market
+            if last_order_in_market > 0:
                 continue
 
             # todo test add exeception

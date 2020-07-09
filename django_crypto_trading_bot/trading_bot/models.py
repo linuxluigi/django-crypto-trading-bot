@@ -357,6 +357,7 @@ class Bot(models.Model):
     stop_loss = models.DecimalField(
         max_digits=30, decimal_places=2, blank=True, null=True
     )
+    lock_time = models.IntegerField(default=12)
 
     @property
     def start_amount(self) -> Optional[Decimal]:

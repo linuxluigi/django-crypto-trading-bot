@@ -110,7 +110,7 @@ class BotAdmin(admin.ModelAdmin):
         ("Trade Mode: Wave Rider", {"fields": ["market", "timeframe"]}),
         (
             "Trade Mode: Rising Chart",
-            {"fields": ["quote", "max_amount", "min_rise", "stop_loss"]},
+            {"fields": ["quote", "max_amount", "min_rise", "stop_loss", "lock_time"]},
         ),
         (
             "Stats",

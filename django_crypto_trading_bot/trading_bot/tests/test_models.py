@@ -262,7 +262,7 @@ class TestOrder(unittest.TestCase):
             "{:.3f}".format(
                 sell_order.get_retrade_amount(price=sell_order.price - Decimal(1))
             )
-            == "111.100"
+            == "111.000"
         )
 
         # add fee rate in bot
