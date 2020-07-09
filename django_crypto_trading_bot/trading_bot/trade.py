@@ -279,25 +279,27 @@ def run_rising_chart(test: bool = False):
             if amount < market.limits_amount_min:
                 break
 
-            while True:
-                try:
-                    amount = market.get_min_max_order_amount(amount=amount)
-                    if amount < market.limits_amount_min:
-                        break
+            # while True:
+            try:
+                # amount = market.get_min_max_order_amount(amount=amount)
+                # if amount < market.limits_amount_min:
+                #    break
 
-                    order = create_order(
-                        amount=amount,
-                        side=Order.Side.SIDE_BUY,
-                        bot=bot,
-                        market=market,
-                        price=ticker["bid"],
-                        isTestOrder=test,
-                    )
-                    order.market = market
-                    order.last_price_tick = Decimal(ticker["bid"])
-                    order.save()
-                    break
-                except (RequestTimeout, ExchangeNotAvailable):
-                    sleep(30)
-                except InsufficientFunds:
-                    amount -= market.limits_amount_min * 5
+                order = create_order(
+                    amount=amount,
+                    side=Order.Side.SIDE_BUY,
+                    bot=bot,
+                    market=market,
+                    price=ticker["bid"],
+                    isTestOrder=test,
+                )
+                order.market = market
+                order.last_price_tick = Decimal(ticker["bid"])
+                order.save()
+                break
+            except (RequestTimeout, ExchangeNotAvailable):
+                sleep(30)
+            except InsufficientFunds:
+                amount -= market.limits_amount_min * 5
+            except InvalidOrder:
+                break
