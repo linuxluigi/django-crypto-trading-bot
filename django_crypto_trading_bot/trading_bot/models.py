@@ -362,7 +362,7 @@ class Bot(models.Model):
         orders: models.Manager[Order] = Order.objects.filter(bot=self).order_by(
             "timestamp"
         )[:1]
-        if len(orders):
+        if orders:
             return orders[0].amount
         return None
 
@@ -371,7 +371,7 @@ class Bot(models.Model):
         orders: models.Manager[Order] = Order.objects.filter(
             bot=self, status=Order.Status.CLOSED
         ).order_by("-timestamp")[:1]
-        if len(orders):
+        if orders:
             return orders[0].amount
         return None
 
@@ -380,7 +380,7 @@ class Bot(models.Model):
         orders: models.Manager[Order] = Order.objects.filter(bot=self).order_by(
             "-timestamp"
         )[:1]
-        if len(orders):
+        if orders:
             return orders[0].amount
         return None
 
