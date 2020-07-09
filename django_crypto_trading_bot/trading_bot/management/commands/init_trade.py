@@ -2,10 +2,10 @@ from decimal import Decimal
 from typing import List
 
 from ccxt.base.exchange import Exchange
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from django_crypto_trading_bot.trading_bot.api.order import create_order
-from django_crypto_trading_bot.trading_bot.models import OHLCV, Bot, Order, Timeframes
+from django_crypto_trading_bot.trading_bot.models import OHLCV, Bot, Order
 
 from ...exceptions import NoMarket, NoTimeFrame
 

@@ -1,22 +1,15 @@
 from decimal import Decimal
 
 import pytest
-from django.conf import settings
 from django.test import RequestFactory
 
-from django_crypto_trading_bot.trading_bot.models import OHLCV, Account, Market
+from django_crypto_trading_bot.trading_bot.models import OHLCV
 from django_crypto_trading_bot.trading_bot.tests.factories import (
-    AccountFactory,
     BnbCurrencyFactory,
-    BnbEurMarketFactory,
-    BuyOrderFactory,
     EurCurrencyFactory,
-    MarketFactory,
     OHLCVBnbEurFactory,
     OHLCVTrxBnbFactory,
-    SellOrderFactory,
-    TrxCurrencyFactory,
-)
+    TrxCurrencyFactory)
 
 
 @pytest.fixture

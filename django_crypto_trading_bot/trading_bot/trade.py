@@ -33,9 +33,7 @@ from django_crypto_trading_bot.trading_bot.models import (
     Market,
     Order,
     OrderErrorLog,
-    Saving,
-    Timeframes,
-)
+    Saving)
 
 logger = logging.getLogger(__name__)
 
