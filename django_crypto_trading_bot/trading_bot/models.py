@@ -144,8 +144,9 @@ class Market(models.Model):
         getcontext().prec = 20
         return amount.quantize(Decimal(".1") ** self.precision_amount)
 
-    def __str__(self) -> str:
-        return self.symbol
+    # todo enable soon again
+    # def __str__(self) -> str:
+    #     return self.symbol
 
 
 class OrderErrorLog(models.Model):
@@ -387,6 +388,9 @@ class Bot(models.Model):
 
     @property
     def roi(self) -> Optional[Decimal]:
+        # todo
+        if self.trade_mode == TradeMode.RISING_CHART:
+            return Decimal(0)
         start_amount: Optional[Decimal] = self.start_amount
         if not start_amount:
             return None
