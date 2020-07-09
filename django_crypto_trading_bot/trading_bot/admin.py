@@ -43,7 +43,15 @@ class AccountAdmin(admin.ModelAdmin):
         ("User", {"fields": ["user"]}),
         (
             "Exchange information",
-            {"fields": ["exchange", "api_key", "secret", "password", "default_fee_rate"]},
+            {
+                "fields": [
+                    "exchange",
+                    "api_key",
+                    "secret",
+                    "password",
+                    "default_fee_rate",
+                ]
+            },
         ),
     ]
 
