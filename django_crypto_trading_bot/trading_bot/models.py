@@ -25,6 +25,7 @@ from .exceptions import (
     PriceToLow,
     FunktionNotForTradeMode,
     NoQuoteCurrency,
+    NoMarket,
 )
 
 # Get an instance of a logger
@@ -272,12 +273,17 @@ class Order(models.Model):
             Decimal -- retrade amount
         """
         # todo add test case
-        if not self.bot.market:
-            raise FunktionNotForTradeMode("Only availe in wave rider trade mode!")
+        market: Market
+        if self.bot.market:
+            market = self.bot.market
+        elif self.market:
+            market = self.market
+        else:
+            raise NoMarket("No market in bot or order available!")
 
-        if price < self.bot.market.limits_price_min:
+        if price < market.limits_price_min:
             raise PriceToLow()
-        if price > self.bot.market.limits_price_max:
+        if price > market.limits_price_max:
             raise PriceToHigh()
 
         getcontext().rounding = ROUND_DOWN
@@ -298,9 +304,9 @@ class Order(models.Model):
             quote_amount: Decimal = amount * self.price
             amount = quote_amount / price
 
-        amount -= amount % self.bot.market.limits_amount_min
+        amount -= amount % market.limits_amount_min
 
-        return self.bot.market.get_min_max_order_amount(amount=amount)
+        return market.get_min_max_order_amount(amount=amount)
 
     @property
     def errors(self) -> int:

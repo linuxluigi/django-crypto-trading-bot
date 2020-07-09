@@ -82,10 +82,34 @@ class TestRisingChart(unittest.TestCase):
         BtcBnbMarketFactory().save()
 
         tickers: dict = {
-            "BNB/EUR": {"symbol": "BNB/EUR", "percentage": 2.0, "last": 1.0, "bid": 1.0, "ask": 1.0},
-            "TRX/BNB": {"symbol": "TRX/BNB", "percentage": 6.0, "last": 1.0, "bid": 1.0, "ask": 1.0},
-            "ETH/BNB": {"symbol": "ETH/BNB", "percentage": 10.0, "last": 1.0, "bid": 1.0, "ask": 1.0},
-            "BTC/BNB": {"symbol": "BTC/BNB", "percentage": -2.0, "last": 1.0, "bid": 1.0, "ask": 1.0},
+            "BNB/EUR": {
+                "symbol": "BNB/EUR",
+                "percentage": 2.0,
+                "last": 1.0,
+                "bid": 1.0,
+                "ask": 1.0,
+            },
+            "TRX/BNB": {
+                "symbol": "TRX/BNB",
+                "percentage": 6.0,
+                "last": 1.0,
+                "bid": 1.0,
+                "ask": 1.0,
+            },
+            "ETH/BNB": {
+                "symbol": "ETH/BNB",
+                "percentage": 10.0,
+                "last": 1.0,
+                "bid": 1.0,
+                "ask": 1.0,
+            },
+            "BTC/BNB": {
+                "symbol": "BTC/BNB",
+                "percentage": -2.0,
+                "last": 1.0,
+                "bid": 1.0,
+                "ask": 1.0,
+            },
         }
 
         cache.set("tickers-{}".format(exchange), tickers, 60)

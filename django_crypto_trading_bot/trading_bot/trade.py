@@ -194,7 +194,10 @@ def run_rising_chart(test: bool = False):
         # sell or update orders
         order: Order
         for order in Order.objects.filter(
-            bot=bot, side=Order.Side.SIDE_BUY, next_order=None, status=Order.Status.CLOSED,
+            bot=bot,
+            side=Order.Side.SIDE_BUY,
+            next_order=None,
+            status=Order.Status.CLOSED,
         ):
             # todo test add exeception
             if not order.market:
@@ -212,7 +215,9 @@ def run_rising_chart(test: bool = False):
                     # todo add exception for low balance
                     try:
                         order.next_order = create_order(
-                            amount=order.amount,
+                            amount=order.get_retrade_amount(
+                                Decimal(tickers[order.market.symbol]["ask"])
+                            ),
                             side=Order.Side.SIDE_SELL,
                             bot=bot,
                             market=order.market,
