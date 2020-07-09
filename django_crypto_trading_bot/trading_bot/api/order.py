@@ -7,8 +7,6 @@ from typing import Optional
 import pytz
 from ccxt import Exchange
 from django.utils import timezone
-
-from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.models import (
     Bot,
     Currency,
