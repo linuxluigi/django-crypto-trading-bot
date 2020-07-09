@@ -6,13 +6,10 @@ from django.utils import timezone
 from factory import DjangoModelFactory, SubFactory
 
 from django_crypto_trading_bot.trading_bot.models import (
-    OHLCV,
     Exchanges,
     Order,
     Timeframes,
-    Trade,
-    Bot,
-)
+    Bot)
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 
 

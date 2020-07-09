@@ -1,4 +1,3 @@
-import pytest
 from ccxt.base.exchange import Exchange
 from django_crypto_trading_bot.trading_bot.api.client import get_client
 

@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django_crypto_trading_bot.trading_bot.api.market import (
     get_all_markets_from_exchange,
 )
