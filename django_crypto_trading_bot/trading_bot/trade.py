@@ -225,6 +225,7 @@ def run_rising_chart(test: bool = False):
                             isTestOrder=test,
                         )
                         order.next_order.market = market
+                        order.next_order.save()
                         order.save()
                         break
                     except (RequestTimeout, ExchangeNotAvailable):
