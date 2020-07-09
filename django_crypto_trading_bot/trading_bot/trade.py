@@ -266,6 +266,10 @@ def run_rising_chart(test: bool = False):
 
             amount: Decimal = quote_amount / Decimal(ticker["last"])
 
+            amount = market.get_min_max_order_amount(amount=amount)
+            if amount < market.limits_amount_min:
+                break
+
             while True:
                 try:
                     amount = market.get_min_max_order_amount(amount=amount)

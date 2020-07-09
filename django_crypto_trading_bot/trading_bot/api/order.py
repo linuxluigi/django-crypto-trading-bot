@@ -41,9 +41,9 @@ def create_order(
 
     params = {"test": isTestOrder}  # test if it's valid, but don't actually place it
 
-    order_type: str = Order.OrderType.LIMIT
+    order_type: str = "LIMIT"
     if not price:
-        order_type = Order.OrderType.MARKET
+        order_type = "MARKET"
 
     if isTestOrder:
 

@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.utils import timezone
 
 from django_crypto_trading_bot.trading_bot.models import (
+    Bot,
     OHLCV,
     Order,
     OrderErrorLog,
@@ -113,6 +114,7 @@ class TestRisingChart(unittest.TestCase):
 
         order_buy: Order = Order.objects.get(pk=order.pk)
 
+        assert order_buy.last_price_tick is not None
         assert "{:0.1f}".format(order_buy.last_price_tick) == "1.0"
         assert order_buy.next_order is None
 
