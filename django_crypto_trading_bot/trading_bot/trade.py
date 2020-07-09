@@ -232,8 +232,9 @@ def run_rising_chart(test: bool = False):
                         sleep(30)
             else:
                 # update order price
-                order.last_price_tick = last
-                order.save()
+                if last > order.last_price_tick:
+                    order.last_price_tick = last
+                    order.save()
 
         ticker: dict
         for key, ticker in tickers.items():
