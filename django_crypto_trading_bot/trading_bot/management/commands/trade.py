@@ -7,6 +7,7 @@ from django_crypto_trading_bot.trading_bot.trade import run_rising_chart, run_wa
 
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
     help = "Update trades & create re orders."
 
