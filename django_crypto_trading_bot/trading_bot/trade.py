@@ -216,6 +216,7 @@ def run_rising_chart(test: bool = False):
                             side=Order.Side.SIDE_SELL,
                             bot=bot,
                             market=order.market,
+                            price=tickers[order.market.symbol]["ask"],
                             isTestOrder=test,
                         )
                         order.save()
@@ -264,7 +265,7 @@ def run_rising_chart(test: bool = False):
             if bot.max_amount and quote_amount > bot.max_amount:
                 quote_amount = bot.max_amount
 
-            amount: Decimal = quote_amount / Decimal(ticker["last"])
+            amount: Decimal = quote_amount / Decimal(ticker["bid"])
 
             amount = market.get_min_max_order_amount(amount=amount)
             if amount < market.limits_amount_min:
@@ -281,10 +282,11 @@ def run_rising_chart(test: bool = False):
                         side=Order.Side.SIDE_BUY,
                         bot=bot,
                         market=market,
-                        price=ticker["last"],
+                        price=ticker["bid"],
                         isTestOrder=test,
                     )
                     order.market = market
+                    order.last_price_tick = Decimal(ticker["bid"])
                     order.save()
                     break
                 except (RequestTimeout, ExchangeNotAvailable):
