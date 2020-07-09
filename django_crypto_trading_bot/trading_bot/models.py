@@ -144,9 +144,8 @@ class Market(models.Model):
         getcontext().prec = 20
         return amount.quantize(Decimal(".1") ** self.precision_amount)
 
-    # todo enable soon again
-    # def __str__(self) -> str:
-    #     return self.symbol
+    def __str__(self) -> str:
+        return self.symbol
 
 
 class OrderErrorLog(models.Model):
