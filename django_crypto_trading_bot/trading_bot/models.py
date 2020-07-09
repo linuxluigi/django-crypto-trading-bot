@@ -66,7 +66,7 @@ class Account(models.Model):
     secret = models.CharField(max_length=250)
     password = models.CharField(max_length=250, blank=True, null=True)
     default_fee_rate = models.DecimalField(
-        max_digits=30, decimal_places=4, default=Decimal(0.01)
+        max_digits=30, decimal_places=4, default=Decimal(0.1)
     )
 
     def get_account_client(self) -> Exchange:
@@ -297,7 +297,7 @@ class Order(models.Model):
         else:
             fee_rate = self.bot.account.default_fee_rate
 
-        fee_cost: Decimal = amount * fee_rate / Decimal(100)
+        fee_cost: Decimal = amount / Decimal(100) * fee_rate
 
         amount -= fee_cost
 
