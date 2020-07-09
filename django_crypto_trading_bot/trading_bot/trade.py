@@ -224,6 +224,7 @@ def run_rising_chart(test: bool = False):
                             price=tickers[order.market.symbol]["ask"],
                             isTestOrder=test,
                         )
+                        order.next_order.market = market
                         order.save()
                         break
                     except (RequestTimeout, ExchangeNotAvailable):
