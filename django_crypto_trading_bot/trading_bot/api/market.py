@@ -73,10 +73,10 @@ def update_all_markets(exchange: Exchange):
 def get_all_markets_from_exchange(exchange_id: str) -> List[Market]:
     """
     Load all markets from an exchange into the database
-    
+
     Arguments:
         exchange_id {str} -- exchange name like "binance"
-    
+
     Returns:
         List[Market] -- All Markets from the exchange as model
     """

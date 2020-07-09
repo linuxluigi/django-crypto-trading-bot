@@ -65,8 +65,8 @@ class TestWaveRider(unittest.TestCase):
         buy_order_reload: Order = Order.objects.get(pk=buy_order.pk)
         sell_order_reload: Order = Order.objects.get(pk=sell_order.pk)
 
-        assert buy_order_reload.next_order != None
-        assert sell_order_reload.next_order != None
+        assert buy_order_reload.next_order is not None
+        assert sell_order_reload.next_order is not None
 
         Saving.objects.get(order=sell_order)
 

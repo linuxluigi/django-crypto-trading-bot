@@ -15,7 +15,6 @@ from ccxt.base.errors import RequestTimeout
 from ccxt.base.exchange import Exchange
 from django.core.cache import cache
 from django.db import models
-from django.utils import timezone
 
 from django_crypto_trading_bot.users.models import User
 
@@ -23,7 +22,6 @@ from .api.client import get_client
 from .exceptions import (
     PriceToHigh,
     PriceToLow,
-    FunktionNotForTradeMode,
     NoQuoteCurrency,
     NoMarket,
 )
@@ -584,7 +582,7 @@ class OHLCV(models.Model):
                     timeframe=timeframe,
                     since=last_candle_time + 1,
                 )
-            except RequestTimeout as e:
+            except RequestTimeout:
                 logger.warning(
                     "Connetion error from {} ... wait 120s for next try".format(
                         market.exchange
