@@ -388,9 +388,6 @@ class Bot(models.Model):
 
     @property
     def roi(self) -> Optional[Decimal]:
-        # todo
-        if self.trade_mode == TradeMode.RISING_CHART:
-            return Decimal(0)
         start_amount: Optional[Decimal] = self.start_amount
         if not start_amount:
             return None
