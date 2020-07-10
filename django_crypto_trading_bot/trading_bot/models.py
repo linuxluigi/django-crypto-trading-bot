@@ -433,7 +433,7 @@ class Bot(models.Model):
     def fetch_tickers(self) -> OrderedDict:
         exchange: Exchange = get_client(exchange_id=self.account.exchange)
         tickers: dict = cache.get_or_set(
-            "tickers-{}".format(self.account.exchange), exchange.fetch_tickers(), 120
+            "tickers-{}".format(self.account.exchange), exchange.fetch_tickers(), 50
         )
         item: dict
         return OrderedDict(
