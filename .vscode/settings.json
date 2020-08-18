@@ -1,5 +1,5 @@
 {
-  "python.pythonPath": "venv/bin/python",
+  "python.pythonPath": "/bin/python3",
   "python.linting.pylintEnabled": true,
   "python.formatting.provider": "black",
   "cSpell.words": [

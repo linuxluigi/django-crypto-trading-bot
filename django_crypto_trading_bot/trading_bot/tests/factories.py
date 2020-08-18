@@ -9,7 +9,8 @@ from django_crypto_trading_bot.trading_bot.models import (
     Exchanges,
     Order,
     Timeframes,
-    Bot)
+    Bot,
+)
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 
 

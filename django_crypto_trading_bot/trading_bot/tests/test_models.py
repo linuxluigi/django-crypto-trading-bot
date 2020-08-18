@@ -17,14 +17,16 @@ from django_crypto_trading_bot.trading_bot.models import (
     Market,
     Order,
     OrderErrorLog,
-    Timeframes)
+    Timeframes,
+)
 
 from .factories import (
     AccountFactory,
     BotFactory,
     BuyOrderFactory,
     MarketFactory,
-    SellOrderFactory)
+    SellOrderFactory,
+)
 
 
 @pytest.mark.django_db()

@@ -18,3 +18,6 @@ djangorestframework==3.11.0  # https://github.com/encode/django-rest-framework
 
 # trading bot
 ccxt==1.30.74  # https://github.com/ccxt/ccxt
+
+# cronjob
+crontab==0.22.9 

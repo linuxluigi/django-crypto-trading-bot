@@ -8,7 +8,8 @@ from ccxt import Exchange
 
 from django_crypto_trading_bot.trading_bot.api.client import get_client
 from django_crypto_trading_bot.trading_bot.api.market import (
-    get_all_markets_from_exchange)
+    get_all_markets_from_exchange,
+)
 from django_crypto_trading_bot.trading_bot.api.order import (
     create_order,
     update_order_from_api_response,
@@ -21,7 +22,8 @@ from django_crypto_trading_bot.trading_bot.tests.factories import (
     BotFactory,
     BtcCurrencyFactory,
     BuyOrderFactory,
-    EthCurrencyFactory)
+    EthCurrencyFactory,
+)
 
 
 @pytest.mark.django_db()

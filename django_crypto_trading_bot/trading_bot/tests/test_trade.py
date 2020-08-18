@@ -10,7 +10,8 @@ from django_crypto_trading_bot.trading_bot.models import (
     OHLCV,
     Order,
     Saving,
-    Timeframes)
+    Timeframes,
+)
 from django_crypto_trading_bot.trading_bot.tests.factories import (
     BnbEurMarketFactory,
     BtcBnbMarketFactory,

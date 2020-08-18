@@ -9,7 +9,8 @@ from django_crypto_trading_bot.trading_bot.tests.factories import (
     EurCurrencyFactory,
     OHLCVBnbEurFactory,
     OHLCVTrxBnbFactory,
-    TrxCurrencyFactory)
+    TrxCurrencyFactory,
+)
 
 
 @pytest.fixture
