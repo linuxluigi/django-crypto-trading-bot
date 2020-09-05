@@ -1,6 +1,8 @@
 import os
 import sys
 
+import django
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -13,13 +15,11 @@ import sys
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-if os.environ.setdefault("USE_DOCKER", ""):
-    import django
 
-    sys.path.insert(0, os.path.abspath("/app"))
-    os.environ.setdefault("DATABASE_URL", "")
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
-    django.setup()
+sys.path.insert(0, os.path.abspath("/app"))
+os.environ.setdefault("DATABASE_URL", "")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
+django.setup()
 
 # -- Project information -----------------------------------------------------
 

@@ -13,12 +13,12 @@ sphinx:
 #mkdocs:
 #  configuration: mkdocs.yml
 
-# Optionally build your docs in additional formats such as PDF
-formats:
-  - pdf
+formats: all
 
-# Optionally set the version of Python and requirements required to build your docs
 python:
   version: 3.8
   install:
-    - requirements: requirements/docs.txt
+    - requirements: requirements/local.txt
+    - method: pip
+      path: .
+  system_packages: true
