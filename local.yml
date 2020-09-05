@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 volumes:
   local_postgres_data: {}
@@ -22,6 +22,21 @@ services:
     ports:
       - "8000:8000"
     command: /start
+
+  docs:
+    image: django_crypto_trading_bot_local_docs
+    container_name: docs
+    build:
+      context: .
+      dockerfile: ./compose/local/docs/Dockerfile
+    env_file:
+      - ./.envs/.local/.django
+    volumes:
+      - ./docs:/docs
+      - ./config:/app/config
+      - ./django_crypto_trading_bot:/app/django_crypto_trading_bot
+    ports:
+      - "7000:7000"
 
   postgres:
     build:

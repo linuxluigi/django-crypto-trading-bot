@@ -10,7 +10,10 @@ Welcome to Django Crypto Trading Bot's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   howto
    pycharm/configuration
+   trading_bot
+   users
 
 
 
