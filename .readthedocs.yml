@@ -20,5 +20,5 @@ python:
   install:
     - requirements: requirements/local.txt
     - method: pip
-      path: .
+      path: docs
   system_packages: true
