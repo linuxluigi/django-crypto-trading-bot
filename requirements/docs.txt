@@ -1,0 +1,5 @@
+# Documentation
+# ------------------------------------------------------------------------------
+sphinx==3.2.1  # https://github.com/sphinx-doc/sphinx
+sphinx-autobuild==2020.9.1 # https://github.com/GaretJax/sphinx-autobuild
+sphinx-rtd-theme==0.5.0  # https://github.com/readthedocs/sphinx_rtd_theme 
