@@ -1,5 +1,0 @@
-[run]
-include = django_crypto_trading_bot/*
-omit = *migrations*, *tests*
-plugins =
-    django_coverage_plugin

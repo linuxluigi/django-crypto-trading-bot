@@ -9,21 +9,6 @@ Auto crypto trading bot for various exchanges.
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
      :target: https://github.com/ambv/black
      :alt: Black code style
-.. image:: https://travis-ci.com/linuxluigi/django-crypto-trading-bot.svg?branch=master
-     :target: https://travis-ci.com/linuxluigi/django-crypto-trading-bot
-     :alt: Travis CI tests
-.. image:: https://readthedocs.org/projects/django-crypto-trading-bot/badge/?version=latest
-     :target: https://django-crypto-trading-bot.readthedocs.io/en/latest/?badge=latest
-     :alt: Documentation Status
-.. image:: https://coveralls.io/repos/github/linuxluigi/django-crypto-trading-bot/badge.svg?branch=master
-     :target: https://coveralls.io/github/linuxluigi/django-crypto-trading-bot?branch=master
-     :alt: Coverage
-.. image:: https://api.codacy.com/project/badge/Grade/c6bd668a8e61448b86a15fdb2648cd38?isInternal=true
-     :target: https://www.codacy.com/manual/linuxluigi/django-crypto-trading-bot?utm_source=github.com&utm_medium=referral&utm_content=linuxluigi/django-crypto-trading-bot&utm_campaign=Badge_Grade_Dashboard
-     :alt: Codacy quality
-.. image:: https://static.deepsource.io/deepsource-badge-light.svg
-     :target: https://deepsource.io/gh/linuxluigi/django-crypto-trading-bot/?ref=repository-badge
-     :alt: DeepSource
 
 
 :License: MIT
@@ -81,6 +66,22 @@ Live reloading and Sass CSS compilation
 Moved to `Live reloading and SASS compilation`_.
 
 .. _`Live reloading and SASS compilation`: http://cookiecutter-django.readthedocs.io/en/latest/live-reloading-and-sass-compilation.html
+
+
+
+Celery
+^^^^^^
+
+This app comes with Celery.
+
+To run a celery worker:
+
+.. code-block:: bash
+
+    cd django_crypto_trading_bot
+    celery -A config.celery_app worker -l info
+
+Please note: For Celery's import magic to work, it is important *where* the celery commands are run. If you are in the same folder with *manage.py*, you should be right.
 
 
 

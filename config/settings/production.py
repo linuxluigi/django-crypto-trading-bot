@@ -3,8 +3,8 @@ import logging
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
-from sentry_sdk.integrations.aiohttp import AioHttpIntegration
-from sentry_sdk.integrations.redis import RedisIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
+
 
 from .base import *  # noqa
 from .base import env
@@ -14,9 +14,7 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list(
-    "DJANGO_ALLOWED_HOSTS", default=["django-crypto-trading-bot.org"]
-)
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["example.com"])
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -33,7 +31,7 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             # Mimicing memcache behavior.
-            # http://jazzband.github.io/django-redis/latest/#_memcached_exceptions_behavior
+            # https://github.com/jazzband/django-redis#memcached-exceptions-behavior
             "IGNORE_EXCEPTIONS": True,
         },
     }
@@ -64,37 +62,11 @@ SECURE_CONTENT_TYPE_NOSNIFF = env.bool(
     "DJANGO_SECURE_CONTENT_TYPE_NOSNIFF", default=True
 )
 
-# STORAGES
-# ------------------------------------------------------------------------------
-# https://django-storages.readthedocs.io/en/latest/#installation
-INSTALLED_APPS += ["storages"]  # noqa F405
-# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_ACCESS_KEY_ID = env("DJANGO_AWS_ACCESS_KEY_ID")
-# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_SECRET_ACCESS_KEY = env("DJANGO_AWS_SECRET_ACCESS_KEY")
-# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_STORAGE_BUCKET_NAME = env("DJANGO_AWS_STORAGE_BUCKET_NAME")
-# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_QUERYSTRING_AUTH = False
-# DO NOT change these unless you know what you're doing.
-_AWS_EXPIRY = 60 * 60 * 24 * 7
-# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_S3_OBJECT_PARAMETERS = {
-    "CacheControl": f"max-age={_AWS_EXPIRY}, s-maxage={_AWS_EXPIRY}, must-revalidate"
-}
-#  https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_DEFAULT_ACL = None
-# https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
-AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME", default=None)
 # STATIC
 # ------------------------
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # MEDIA
 # ------------------------------------------------------------------------------
-DEFAULT_FILE_STORAGE = (
-    "django_crypto_trading_bot.utils.storages.MediaRootS3Boto3Storage"
-)
-MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/media/"
 
 # TEMPLATES
 # ------------------------------------------------------------------------------
@@ -113,8 +85,7 @@ TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
-    "DJANGO_DEFAULT_FROM_EMAIL",
-    default="Django Crypto Trading Bot <noreply@django-crypto-trading-bot.org>",
+    "DJANGO_DEFAULT_FROM_EMAIL", default="Django Crypto Trading Bot <noreply@example.com>"
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
@@ -128,19 +99,19 @@ EMAIL_SUBJECT_PREFIX = env(
 # Django Admin URL regex.
 ADMIN_URL = env("DJANGO_ADMIN_URL")
 
-# # Anymail
-# # ------------------------------------------------------------------------------
-# # https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
-# INSTALLED_APPS += ["anymail"]  # noqa F405
-# # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
-# # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
-# # https://anymail.readthedocs.io/en/stable/esps/mailgun/
-# EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
-# ANYMAIL = {
-#     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
-#     "MAILGUN_SENDER_DOMAIN": env("MAILGUN_DOMAIN"),
-#     "MAILGUN_API_URL": env("MAILGUN_API_URL", default="https://api.mailgun.net/v3"),
-# }
+# Anymail
+# ------------------------------------------------------------------------------
+# https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
+INSTALLED_APPS += ["anymail"]  # noqa F405
+# https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
+# https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
+# https://anymail.readthedocs.io/en/stable/esps/mailgun/
+EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+ANYMAIL = {
+    "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
+    "MAILGUN_SENDER_DOMAIN": env("MAILGUN_DOMAIN"),
+    "MAILGUN_API_URL": env("MAILGUN_API_URL", default="https://api.mailgun.net/v3"),
+}
 
 
 # LOGGING
@@ -191,14 +162,12 @@ sentry_logging = LoggingIntegration(
     level=SENTRY_LOG_LEVEL,  # Capture info and above as breadcrumbs
     event_level=logging.ERROR,  # Send errors as events
 )
+integrations = [sentry_logging, DjangoIntegration(), CeleryIntegration()]
 sentry_sdk.init(
     dsn=SENTRY_DSN,
-    integrations=[
-        sentry_logging,
-        DjangoIntegration(),
-        AioHttpIntegration(),
-        RedisIntegration(),
-    ],
+    integrations=integrations,
+    environment=env("SENTRY_ENVIRONMENT", default="production"),
+    traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
 )
 
 # Your stuff...

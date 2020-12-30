@@ -1,4 +1,4 @@
-version: "3"
+version: '3'
 
 volumes:
   production_postgres_data: {}
@@ -6,7 +6,7 @@ volumes:
   production_traefik: {}
 
 services:
-  django:
+  django: &django
     build:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
@@ -19,27 +19,14 @@ services:
       - ./.envs/.production/.postgres
     command: /start
 
-  cron:
-    build:
-      context: .
-      dockerfile: ./compose/production/django/Dockerfile
-    image: django_crypto_trading_bot_production_cron
-    depends_on:
-      - postgres
-      - redis
-    env_file:
-      - ./.envs/.production/.django
-      - ./.envs/.production/.postgres
-    command: /cron
-
   postgres:
     build:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: django_crypto_trading_bot_production_postgres
     volumes:
-      - production_postgres_data:/var/lib/postgresql/data
-      - production_postgres_data_backups:/backups
+      - production_postgres_data:/var/lib/postgresql/data:Z
+      - production_postgres_data_backups:/backups:z
     env_file:
       - ./.envs/.production/.postgres
 
@@ -51,19 +38,28 @@ services:
     depends_on:
       - django
     volumes:
-      - production_traefik:/etc/traefik/acme
+      - production_traefik:/etc/traefik/acme:z
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
+      - "0.0.0.0:5555:5555"
 
   redis:
     image: redis:5.0
 
-  awscli:
-    build:
-      context: .
-      dockerfile: ./compose/production/aws/Dockerfile
-    env_file:
-      - ./.envs/.production/.django
-    volumes:
-      - production_postgres_data_backups:/backups
+  celeryworker:
+    <<: *django
+    image: django_crypto_trading_bot_production_celeryworker
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: django_crypto_trading_bot_production_celerybeat
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: django_crypto_trading_bot_production_flower
+    command: /start-flower
+
+  

@@ -26,7 +26,7 @@ def merge(
 
 
 def main():
-    merge(str(DOTENV_FILE_PATH), str(PRODUCTION_DOTENV_FILE_PATHS))
+    merge(DOTENV_FILE_PATH, PRODUCTION_DOTENV_FILE_PATHS)
 
 
 @pytest.mark.parametrize("merged_file_count", range(3))
@@ -55,7 +55,7 @@ def test_merge(tmpdir_factory, merged_file_count: int, append_linesep: bool):
 
         merged_file_paths.append(merged_file_path)
 
-    merge(str(output_file_path), str(merged_file_paths), append_linesep)
+    merge(output_file_path, merged_file_paths, append_linesep)
 
     with open(output_file_path, "r") as output_file:
         actual_output_file_content = output_file.read()

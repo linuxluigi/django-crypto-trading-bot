@@ -62,7 +62,8 @@ target/
 # pyenv
 .python-version
 
-
+# celery beat schedule file
+celerybeat-schedule
 
 # Environments
 .venv
@@ -263,7 +264,6 @@ Session.vim
 
 # Auto-generated tag files
 tags
-
 
 ### Project template
 
