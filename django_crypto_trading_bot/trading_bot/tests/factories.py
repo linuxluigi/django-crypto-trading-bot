@@ -2,8 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 
 import pytz
-from django.utils import timezone
-from factory import DjangoModelFactory, SubFactory
+from factory import SubFactory
+from factory.django import DjangoModelFactory
 
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 

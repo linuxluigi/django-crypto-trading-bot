@@ -153,15 +153,7 @@ class OHLCV(models.Model):
             timeframe {Timeframes} -- timeframe from candle
         """
 
-        markets: List[Market] = list()
+        # todo add multithreat
+
         for market in Market.objects.filter(active=True):
-            markets.append(market)
-
-        # Make the Pool of workers
-        pool = ThreadPool(8)
-
-        pool.map(partial(OHLCV.update_new_candles, timeframe=timeframe), markets)
-
-        # Close the pool and wait for the work to finish
-        pool.close()
-        pool.join()
+            OHLCV.update_new_candles(market=market, timeframe=timeframe)
