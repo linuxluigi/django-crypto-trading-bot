@@ -27,7 +27,12 @@ Auto crypto trading bot for various exchanges.
 
 
 :License: MIT
+Rewrite in progress
+=========================
 
+The current state of the project is very experimental and there is a complete rewrite_ in progress. Soon it will be possible to create a trading strategy through a django app.
+
+.. _rewrite: https://github.com/linuxluigi/django-crypto-trading-bot/tree/v0.2
 
 Settings
 --------
