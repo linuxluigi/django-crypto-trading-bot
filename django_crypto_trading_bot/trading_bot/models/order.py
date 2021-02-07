@@ -4,7 +4,6 @@ from django.db import models
 
 from .choices import OrderSide, OrderStatus, OrderType
 from .currency import Currency
-from .market import Market
 
 
 class Order(models.Model):
@@ -26,9 +25,6 @@ class Order(models.Model):
     filled = models.DecimalField(
         max_digits=30, decimal_places=8, default=0
     )  # filled amount of base currency
-    next_order = models.ForeignKey(
-        "self", on_delete=models.CASCADE, blank=True, null=True
-    )
     fee_currency = models.ForeignKey(
         Currency, on_delete=models.PROTECT, blank=True, null=True
     )
@@ -38,14 +34,6 @@ class Order(models.Model):
     fee_rate = models.DecimalField(
         max_digits=30, decimal_places=8, blank=True, null=True
     )
-
-    # rising chart
-    last_price_tick = models.DecimalField(
-        max_digits=30, decimal_places=8, blank=True, null=True
-    )
-    market = models.ForeignKey(
-        Market, on_delete=models.PROTECT, blank=True, null=True
-    )  # Cryptomarket like TRX/BNB
 
     def remaining(self) -> Decimal:
         """

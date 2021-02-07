@@ -7,7 +7,7 @@ from factory.django import DjangoModelFactory
 
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 
-from ..models.choices import ExchangesOptions, Timeframes
+from ..models.choices import ExchangesOptions, OrderSide, OrderType, Timeframes
 
 
 class AccountFactory(DjangoModelFactory):
@@ -119,3 +119,18 @@ class OHLCVBnbEurFactory(DjangoModelFactory):
 class OHLCVTrxBnbFactory(OHLCVBnbEurFactory):
     market = SubFactory(MarketFactory)
     closing_price = Decimal(15.7987)
+
+
+class OrderFactory(DjangoModelFactory):
+    class Meta:
+        model = "trading_bot.Order"
+        django_get_or_create = ["order_id"]
+
+    order_id = "1"
+    timestamp = datetime(
+        year=2020, month=4, day=30, hour=23, tzinfo=pytz.timezone("UTC")
+    )
+    order_type = OrderType.MARKET
+    side = OrderSide.SIDE_BUY
+    price = Decimal.from_float(1)
+    amount = Decimal.from_float(1)
