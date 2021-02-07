@@ -5,7 +5,6 @@ from typing import List, Optional
 
 import pytest
 import pytz
-from _pytest import mark
 from ccxt.base.exchange import Exchange
 
 from django_crypto_trading_bot.trading_bot.models import OHLCV, Market
