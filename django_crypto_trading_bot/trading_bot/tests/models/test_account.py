@@ -15,3 +15,11 @@ class TestAccount(unittest.TestCase):
         client: Exchange = account.get_account_client()
 
         assert isinstance(client, Exchange)
+
+    def test_to_string(self):
+        account: Account = AccountFactory()
+
+        assert (
+            account.__str__()
+            == f"{account.pk}: binance - {account.user.get_username()}"
+        )
