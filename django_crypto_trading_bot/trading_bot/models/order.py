@@ -2,8 +2,8 @@ from decimal import Decimal
 
 from django.db import models
 
+from . import Currency, Market
 from .choices import OrderSide, OrderStatus, OrderType
-from .currency import Currency
 
 
 class Order(models.Model):
@@ -11,6 +11,9 @@ class Order(models.Model):
     Order based on https://github.com/ccxt/ccxt/wiki/Manual#order-structure
     """
 
+    market = models.ForeignKey(
+        Market, on_delete=models.PROTECT
+    )  # Cryptomarket like TRX/BNB
     order_id = models.CharField(max_length=255, unique=True)
     timestamp = models.DateTimeField()
     status = models.CharField(
