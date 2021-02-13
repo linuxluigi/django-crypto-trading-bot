@@ -11,6 +11,7 @@ import pytz
 from ccxt.base.errors import RequestTimeout
 from ccxt.base.exchange import Exchange
 from django.db import models
+from django.db.models.manager import BaseManager
 
 from ..utils import get_client
 from .choices import Timeframes
@@ -34,9 +35,7 @@ class OHLCV(models.Model):
     volume = models.DecimalField(max_digits=30, decimal_places=8)
 
     @staticmethod
-    def get_OHLCV(
-        candle: List[float], timeframe: str, market: Market
-    ) -> Optional["OHLCV"]:
+    def get_OHLCV(candle: List[float], timeframe: str, market: Market) -> "OHLCV":
         """Get a OHLCV candle from a OHLCV request
         Arguments:
             candle {List[float]} -- candle list
@@ -75,7 +74,7 @@ class OHLCV(models.Model):
         return ohlcv
 
     @staticmethod
-    def last_candle(timeframe: Timeframes, market: Market) -> "OHLCV":
+    def last_candle(timeframe: Timeframes, market: Market) -> Optional["OHLCV"]:
         """Get last candle by timestamp of market & timeframe
         Arguments:
             timeframe {Timeframes} -- timeframe from candle
@@ -83,11 +82,13 @@ class OHLCV(models.Model):
         Returns:
             Optional[OHLCV] -- last candle by timestamp of market & timeframe
         """
-        return (
-            OHLCV.objects.filter(timeframe=timeframe, market=market)
-            .order_by("timestamp")
-            .last()
-        )
+        ohlcvs: BaseManager = OHLCV.objects.filter(
+            timeframe=timeframe, market=market
+        ).order_by("-timestamp")[:1]
+
+        if len(ohlcvs) == 1:
+            return ohlcvs[0]
+        return None
 
     @staticmethod
     def update_new_candles(market: Market, timeframe: Timeframes):
@@ -98,7 +99,9 @@ class OHLCV(models.Model):
         """
         exchange: Exchange = get_client(exchange_id=market.exchange)
 
-        last_candle: List[OHLCV] = OHLCV.last_candle(timeframe=timeframe, market=market)
+        last_candle: Optional[OHLCV] = OHLCV.last_candle(
+            timeframe=timeframe, market=market
+        )
         last_candle_time: int = 0
 
         if last_candle:
@@ -123,11 +126,10 @@ class OHLCV(models.Model):
                 continue
 
             for candle in candles:
-                ohlcv: Optional[OHLCV] = OHLCV.get_OHLCV(
+                ohlcv: OHLCV = OHLCV.get_OHLCV(
                     candle=candle, timeframe=timeframe, market=market
                 )
-                if ohlcv:
-                    ohlcvs.append(ohlcv)
+                ohlcvs.append(ohlcv)
 
             if len(ohlcvs) >= 10000:
                 OHLCV.objects.bulk_create(ohlcvs)
