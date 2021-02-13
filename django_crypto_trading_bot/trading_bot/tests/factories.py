@@ -126,6 +126,7 @@ class OrderFactory(DjangoModelFactory):
         model = "trading_bot.Order"
         django_get_or_create = ["order_id"]
 
+    account = SubFactory(AccountFactory)
     market = SubFactory(MarketFactory)
     order_id = "1"
     timestamp = datetime(
@@ -135,6 +136,23 @@ class OrderFactory(DjangoModelFactory):
     side = OrderSide.SIDE_BUY
     price = Decimal.from_float(1)
     amount = Decimal.from_float(1)
+
+
+class OrderFactoryNew(OrderFactory):
+
+    order_id = "2"
+    timestamp = datetime(
+        year=2021, month=4, day=30, hour=23, tzinfo=pytz.timezone("UTC")
+    )
+
+
+class OrderFactoryDifferentMarket(OrderFactory):
+
+    order_id = "3"
+    timestamp = datetime(
+        year=2020, month=11, day=30, hour=23, tzinfo=pytz.timezone("UTC")
+    )
+    market = SubFactory(BnbEurMarketFactory)
 
 
 class TradeFactory(DjangoModelFactory):

@@ -1,8 +1,10 @@
 from decimal import Decimal
+from typing import Optional
 
 from django.db import models
+from django.db.models.manager import BaseManager
 
-from . import Currency, Market
+from . import Account, Currency, Market
 from .choices import OrderSide, OrderStatus, OrderType
 
 
@@ -11,6 +13,7 @@ class Order(models.Model):
     Order based on https://github.com/ccxt/ccxt/wiki/Manual#order-structure
     """
 
+    account = models.ForeignKey(Account, on_delete=models.PROTECT)  # exchange account
     market = models.ForeignKey(
         Market, on_delete=models.PROTECT
     )  # Cryptomarket like TRX/BNB
@@ -49,6 +52,32 @@ class Order(models.Model):
         'filled' * 'price' (filling price used where available)
         """
         return self.filled * self.price
+
+    @staticmethod
+    def last_order(
+        account: Account, market: Optional[Market] = None
+    ) -> Optional["Order"]:
+        """
+        Get last order for account
+
+        Arguments:
+            account {Account} -- exchange account
+            market {Optional[Market]} -- last order from a specific market. Default is None
+
+        Returns:
+            Optional[Order] -- last candle by timestamp of market & timeframe
+        """
+        orders: BaseManager
+        if market:
+            orders = Order.objects.filter(market=market, account=account).order_by(
+                "-timestamp"
+            )[:1]
+        else:
+            orders = Order.objects.filter(account=account).order_by("-timestamp")[:1]
+
+        if len(orders) == 1:
+            return orders[0]
+        return None
 
     def __str__(self):
         return "{0}: {1}".format(self.pk, self.order_id)
