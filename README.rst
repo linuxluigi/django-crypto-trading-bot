@@ -50,6 +50,7 @@ Test coverage
 To run the tests, check your test coverage, and generate an HTML coverage report::
 
     $ coverage run -m pytest
+    $ coverage report -m
     $ coverage html
     $ open htmlcov/index.html
 
