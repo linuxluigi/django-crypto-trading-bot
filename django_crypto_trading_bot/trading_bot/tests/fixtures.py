@@ -60,8 +60,8 @@ def order_dict(order_id: str = "12345-67890:09876/54321") -> dict:
         "remaining": 0.4,  # remaining amount to fill
         "cost": 0.076094524,  # 'filled' * 'price' (filling price used where available)
         "trades": [
-            trade_dict(trade_id=1),
-            trade_dict(trade_id=2),
+            trade_dict(trade_id="1"),
+            trade_dict(trade_id="2"),
         ],  # a list of order trades/executions
         "fee": {  # fee info, if available
             "currency": "BTC",  # which currency the fee is (usually quote)

@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Tuple
 
 import pytz
 from django.db import models
@@ -32,7 +31,7 @@ class Trade(models.Model):
 
     @staticmethod
     def get_or_create_by_api_response(
-        cctx_trade: dict, order: "trading_bot.Order"
+        cctx_trade: dict, order: "trading_bot.Order"  # type: ignore
     ) -> "Trade":
         """
         get or create a trade by a api response dict

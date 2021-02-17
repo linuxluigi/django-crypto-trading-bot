@@ -78,8 +78,9 @@ class TestCurrency(unittest.TestCase):
         assert trade_update.taker_or_maker == TakerOrMaker.MAKER
         assert trade_update.amount == Decimal.from_float(1)
         assert trade_update.fee_currency.short == "BNB"
-        self.assertAlmostEqual(trade_update.fee_cost, Decimal.from_float(0.01), 8)
-        self.assertAlmostEqual(trade_update.fee_rate, Decimal.from_float(0.01), 8)
+        self.assertAlmostEqual(float(trade_update.fee_cost), 0.01, 8)
+        assert trade_update.fee_rate is not None
+        self.assertAlmostEqual(float(trade_update.fee_rate), 0.01, 8)
 
         # get trade from database
         assert trade_update == Trade.objects.get(pk=trade_update.pk)

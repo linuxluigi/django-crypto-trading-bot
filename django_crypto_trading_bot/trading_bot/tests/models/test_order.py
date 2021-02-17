@@ -95,9 +95,9 @@ class TestOrder(unittest.TestCase):
         )
         assert order.order_type == OrderType.LIMIT
         assert order.side == OrderSide.BUY
-        self.assertAlmostEqual(order.price, Decimal.from_float(0.06917684), 8)
-        self.assertAlmostEqual(order.amount, Decimal.from_float(1.5), 8)
-        self.assertAlmostEqual(order.filled, Decimal.from_float(1.1), 8)
+        self.assertAlmostEqual(float(order.price), 0.06917684, 8)
+        self.assertAlmostEqual(float(order.amount), 1.5, 8)
+        self.assertAlmostEqual(float(order.filled), 1.1, 8)
 
         # check if there trade was added
         assert Trade.objects.filter(order=order).count() == 2
@@ -114,7 +114,7 @@ class TestOrder(unittest.TestCase):
         )
 
         # check for updated properties
-        self.assertAlmostEqual(order_update.filled, Decimal.from_float(1.1), 8)
+        self.assertAlmostEqual(float(order_update.filled), 1.1, 8)
         assert order_update.status == OrderStatus.OPEN
 
         # check if order was updated

@@ -3,15 +3,13 @@ from decimal import Decimal
 from typing import Optional
 
 import pytz
-from _pytest.mark.structures import Mark
 from django.db import models
 from django.db.models.manager import BaseManager
 
-from django_crypto_trading_bot.trading_bot.models import market
 from django_crypto_trading_bot.trading_bot.models.trade import Trade
 
 from . import Account, Currency, Market
-from .choices import OrderSide, OrderStatus, OrderType
+from .choices import ExchangesOptions, OrderSide, OrderStatus, OrderType
 
 
 class Order(models.Model):
@@ -92,7 +90,8 @@ class Order(models.Model):
                 amount=Decimal(cctx_order["amount"]),
                 filled=Decimal(cctx_order["filled"]),
                 market=Market.get_market(
-                    symbol=cctx_order["symbol"], exchange=account.exchange
+                    symbol=cctx_order["symbol"],
+                    exchange=ExchangesOptions(account.exchange),
                 ),
             )
 

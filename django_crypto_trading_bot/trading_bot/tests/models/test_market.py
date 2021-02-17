@@ -5,6 +5,7 @@ import pytest
 from ccxt.base.exchange import Exchange
 
 from django_crypto_trading_bot.trading_bot.models import Account, Market
+from django_crypto_trading_bot.trading_bot.models.choices import ExchangesOptions
 
 from ..factories import AccountFactory, EthBtcMarketFactory, MarketFactory
 
@@ -114,7 +115,8 @@ class TestMarket(unittest.TestCase):
 
         # get the market by symbol & exchange
         market_get: Market = Market.get_market(
-            symbol=market_original.symbol, exchange=market_original.exchange
+            symbol=market_original.symbol,
+            exchange=ExchangesOptions(market_original.exchange),
         )
 
         # check if the right market was get from the database
