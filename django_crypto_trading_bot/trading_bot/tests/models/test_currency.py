@@ -10,6 +10,9 @@ from ..factories import TrxCurrencyFactory
 @pytest.mark.django_db()
 class TestCurrency(unittest.TestCase):
     def test_to_string(self):
+        """
+        test __str__
+        """
         trx: Currency = TrxCurrencyFactory()
         trx.pk = 1
 

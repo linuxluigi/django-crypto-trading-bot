@@ -1,4 +1,5 @@
 from decimal import Decimal, getcontext
+from typing import List
 
 from django.db import models
 
@@ -37,6 +38,23 @@ class Market(models.Model):
     @property
     def quoteId(self):
         return self.quote.short.lower()
+
+    @staticmethod
+    def get_market(symbol: str, exchange: ExchangesOptions) -> "Market":
+        """
+        Get Market from the database by symbol like "ETH/BTC" and exchange
+
+        Args:
+            symbol (str): Market symbol like "ETH/BTC"
+            exchange (ExchangesOptions): market exchange
+
+        Returns:
+            Market: market by symbol & exchange
+        """
+        currencies: List[str] = symbol.split("/")
+        base: Currency = Currency.objects.get(short=currencies[0])
+        quote: Currency = Currency.objects.get(short=currencies[1])
+        return Market.objects.get(base=base, quote=quote, exchange=exchange)
 
     def get_min_max_price(self, price: Decimal) -> Decimal:
         """

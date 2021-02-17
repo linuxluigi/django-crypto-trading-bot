@@ -153,10 +153,15 @@ class OrderType(models.TextChoices):
     LIMIT = "limit"
 
 
+class TakerOrMaker(models.TextChoices):
+    TAKER = "taker"
+    MAKER = "maker"
+
+
 # SIDE_CHOICE
 class OrderSide(models.TextChoices):
-    SIDE_BUY = "buy"
-    SIDE_SELL = "sell"
+    BUY = "buy"
+    SELL = "sell"
 
 
 # STATUS_CHOICE

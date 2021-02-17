@@ -1,8 +1,14 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
+import pytz
+from _pytest.mark.structures import Mark
 from django.db import models
 from django.db.models.manager import BaseManager
+
+from django_crypto_trading_bot.trading_bot.models import market
+from django_crypto_trading_bot.trading_bot.models.trade import Trade
 
 from . import Account, Currency, Market
 from .choices import OrderSide, OrderStatus, OrderType
@@ -31,15 +37,6 @@ class Order(models.Model):
     filled = models.DecimalField(
         max_digits=30, decimal_places=8, default=0
     )  # filled amount of base currency
-    fee_currency = models.ForeignKey(
-        Currency, on_delete=models.PROTECT, blank=True, null=True
-    )
-    fee_cost = models.DecimalField(
-        max_digits=30, decimal_places=8, blank=True, null=True
-    )
-    fee_rate = models.DecimalField(
-        max_digits=30, decimal_places=8, blank=True, null=True
-    )
 
     def remaining(self) -> Decimal:
         """
@@ -52,6 +49,58 @@ class Order(models.Model):
         'filled' * 'price' (filling price used where available)
         """
         return self.filled * self.price
+
+    def fee_currency(self) -> Currency:
+        pass
+
+    def fee_cost(self) -> Decimal:
+        pass
+
+    def fee_rate(self) -> Decimal:
+        pass
+
+    @staticmethod
+    def get_or_create_by_api_response(cctx_order: dict, account: Account) -> "Order":
+        """
+        get or create a order by a api response dict
+
+        Args:
+            cctx_order (dict): api response dict
+            account (Account): exchange account for the order
+
+        Returns:
+            Order: new created or updated order
+        """
+        order: Order
+
+        try:
+            order = Order.objects.get(order_id=cctx_order["id"], account=account)
+            order.status = cctx_order["status"]
+            order.filled = Decimal(cctx_order["filled"])
+            order.save()
+        except Order.DoesNotExist:
+            order = Order.objects.create(
+                account=account,
+                status=cctx_order["status"],
+                order_id=cctx_order["id"],
+                order_type=OrderType(cctx_order["type"]),
+                side=OrderSide(cctx_order["side"]),
+                timestamp=datetime.fromtimestamp(
+                    cctx_order["timestamp"] / 1000, tz=pytz.timezone("UTC")
+                ),
+                price=Decimal(cctx_order["price"]),
+                amount=Decimal(cctx_order["amount"]),
+                filled=Decimal(cctx_order["filled"]),
+                market=Market.get_market(
+                    symbol=cctx_order["symbol"], exchange=account.exchange
+                ),
+            )
+
+        trade_dict: dict
+        for trade_dict in cctx_order["trades"]:
+            Trade.get_or_create_by_api_response(cctx_trade=trade_dict, order=order)
+
+        return order
 
     @staticmethod
     def last_order(

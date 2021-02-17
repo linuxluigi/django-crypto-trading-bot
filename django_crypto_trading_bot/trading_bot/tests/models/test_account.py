@@ -11,12 +11,18 @@ from ..factories import AccountFactory
 @pytest.mark.django_db()
 class TestAccount(unittest.TestCase):
     def test_get_account_client(self):
+        """
+        test get_account_client
+        """
         account: Account = AccountFactory()
         client: Exchange = account.get_account_client()
 
         assert isinstance(client, Exchange)
 
     def test_to_string(self):
+        """
+        test __str__
+        """
         account: Account = AccountFactory()
 
         assert (

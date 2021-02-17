@@ -17,6 +17,9 @@ from ..factories import MarketFactory
 @pytest.mark.django_db()
 class TestOHLCV(unittest.TestCase):
     def test_get_OHLCV(self):
+        """
+        test get_OHLCV
+        """
 
         market: Market = MarketFactory()
         timeframe: Timeframes = Timeframes.HOUR_1
@@ -46,6 +49,9 @@ class TestOHLCV(unittest.TestCase):
         assert ohlcv.volume == Decimal(test_candel[5])
 
     def test_create_OHLCV(self):
+        """
+        test create_OHLCV
+        """
         market: Market = MarketFactory()
         timeframe: Timeframes = Timeframes.HOUR_1
 
@@ -75,6 +81,9 @@ class TestOHLCV(unittest.TestCase):
         assert ohlcv.volume == Decimal(test_candel[5])
 
     def test_last_candle(self):
+        """
+        test last_candle
+        """
         market: Market = MarketFactory()
         timeframe: Timeframes = Timeframes.MINUTE_1
 
@@ -106,6 +115,9 @@ class TestOHLCV(unittest.TestCase):
         )
 
     def test_update_new_candles(self):
+        """
+        test update_new_candles
+        """
         market: Market = MarketFactory()
 
         # update market with timeframe of 1 month
@@ -131,11 +143,14 @@ class TestOHLCV(unittest.TestCase):
         assert candles_amount <= 553
 
     def test_update_new_candles_all_markets(self):
+        """
+        update_new_candles_all_markets
+        """
         market: Market = MarketFactory()
 
         # update market with timeframe of 1 month
         OHLCV.update_new_candles_all_markets(timeframe=Timeframes.MONTH_1)
-        # assert (
-        #     OHLCV.objects.filter(timeframe=Timeframes.MONTH_1, market=market).count()
-        #     > 20
-        # )
+        assert (
+            OHLCV.objects.filter(timeframe=Timeframes.MONTH_1, market=market).count()
+            > 20
+        )

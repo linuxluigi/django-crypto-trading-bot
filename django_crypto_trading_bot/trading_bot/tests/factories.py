@@ -7,7 +7,13 @@ from factory.django import DjangoModelFactory
 
 from django_crypto_trading_bot.users.tests.factories import UserFactory
 
-from ..models.choices import ExchangesOptions, OrderSide, OrderType, Timeframes
+from ..models.choices import (
+    ExchangesOptions,
+    OrderSide,
+    OrderType,
+    TakerOrMaker,
+    Timeframes,
+)
 
 
 class AccountFactory(DjangoModelFactory):
@@ -87,6 +93,11 @@ class BtcBnbMarketFactory(MarketFactory):
     quote = SubFactory(BnbCurrencyFactory)
 
 
+class EthBtcMarketFactory(MarketFactory):
+    base = SubFactory(EthCurrencyFactory)
+    quote = SubFactory(BtcCurrencyFactory)
+
+
 class OutOfDataMarketFactory(MarketFactory):
     base = SubFactory(BtcCurrencyFactory)
     quote = SubFactory(UsdtCurrencyFactory)
@@ -133,7 +144,7 @@ class OrderFactory(DjangoModelFactory):
         year=2020, month=4, day=30, hour=23, tzinfo=pytz.timezone("UTC")
     )
     order_type = OrderType.MARKET
-    side = OrderSide.SIDE_BUY
+    side = OrderSide.BUY
     price = Decimal.from_float(1)
     amount = Decimal.from_float(1)
 
@@ -165,7 +176,7 @@ class TradeFactory(DjangoModelFactory):
     timestamp = datetime(
         year=2020, month=4, day=30, hour=23, tzinfo=pytz.timezone("UTC")
     )
-    taker_or_maker = OrderType.MARKET
+    taker_or_maker = TakerOrMaker.MAKER
     amount = Decimal.from_float(1)
     fee_currency = SubFactory(BnbCurrencyFactory)
     fee_cost = Decimal.from_float(0.01)
