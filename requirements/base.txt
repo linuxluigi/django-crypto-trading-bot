@@ -21,3 +21,4 @@ ccxt==1.30.74  # https://github.com/ccxt/ccxt
 
 # cronjob
 crontab==0.22.9 
+aiohttp>=3.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
