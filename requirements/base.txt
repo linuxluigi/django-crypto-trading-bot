@@ -1,6 +1,6 @@
 pytz==2020.1  # https://github.com/stub42/pytz
 python-slugify==4.0.0  # https://github.com/un33k/python-slugify
-Pillow==7.1.2  # https://github.com/python-pillow/Pillow
+Pillow==8.2.0  # https://github.com/python-pillow/Pillow
 argon2-cffi==19.2.0  # https://github.com/hynek/argon2_cffi
 whitenoise==5.0.1  # https://github.com/evansd/whitenoise
 redis==3.5.0 # https://github.com/andymccurdy/redis-py
@@ -14,7 +14,7 @@ django-allauth==0.41.0  # https://github.com/pennersr/django-allauth
 django-crispy-forms==1.9.0  # https://github.com/django-crispy-forms/django-crispy-forms
 django-redis==4.11.0  # https://github.com/jazzband/django-redis
 # Django REST Framework
-djangorestframework==3.11.0  # https://github.com/encode/django-rest-framework
+djangorestframework==3.11.2  # https://github.com/encode/django-rest-framework
 
 # trading bot
 ccxt==1.30.74  # https://github.com/ccxt/ccxt
